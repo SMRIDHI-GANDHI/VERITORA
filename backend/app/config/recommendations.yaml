@@ -1,0 +1,35 @@
+version: "rules-2026.11.1"
+
+recommendations:
+  - trigger: UPFRONT_PAYMENT
+    code: DO_NOT_PAY
+    priority: 1
+    text_key: rec.do_not_pay
+  - trigger: SUSPICIOUS_URL
+    code: CHECK_DOMAIN_BEFORE_ENTERING_DATA
+    priority: 2
+    text_key: rec.check_domain
+  - trigger: RECRUITER_MISMATCH
+    code: VERIFY_RECRUITER_OFFICIAL_CHANNEL
+    priority: 2
+    text_key: rec.verify_recruiter_official
+  - trigger: SENSITIVE_DATA_REQUEST
+    code: ASK_WHY_DATA_NEEDED
+    priority: 2
+    text_key: rec.ask_why_data_needed
+  - trigger: OFFER_MISMATCH
+    code: CONFIRM_OFFER_WITH_COMPANY
+    priority: 2
+    text_key: rec.confirm_offer
+  - trigger: OFFER_CONTACT_MISMATCH
+    code: CONFIRM_OFFER_WITH_COMPANY
+    priority: 2
+    text_key: rec.confirm_offer
+  - trigger: HIGH_CONCERN_FINANCIAL
+    code: CONTACT_1930_IF_PAID
+    priority: 1
+    text_key: rec.contact_1930_if_paid
+  - trigger: ALWAYS
+    code: NEVER_SHARE_CREDENTIALS
+    priority: 3
+    text_key: rec.never_share_credentials

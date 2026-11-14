@@ -1,0 +1,30 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "docs/12-CODING-STANDARDS.md",
+    "docs/08-SECURITY-PRIVACY.md"
+  ],
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "*": "ask",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "ls*": "allow",
+      "cat*": "allow",
+      "pytest*": "allow",
+      "ruff*": "allow",
+      "mypy*": "allow",
+      "alembic*": "ask",
+      "npm run lint*": "allow",
+      "npm run test*": "allow",
+      "npm run typecheck*": "allow",
+      "npm run build*": "allow",
+      "rm -rf*": "deny",
+      "git push*": "ask"
+    },
+    "webfetch": "ask"
+  },
+  "snapshot": false
+}

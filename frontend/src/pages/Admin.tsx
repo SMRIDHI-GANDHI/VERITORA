@@ -1,0 +1,322 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  adminListAppeals,
+  adminListReports,
+  adminModerateReport,
+  HttpError,
+  type AdminAppeal,
+  type AdminReport,
+  type ModerationActionType,
+} from '../lib/api'
+import { StatusLabel } from '../components/ui/StatusLabel'
+import { ErrorState } from '../components/ui/ErrorState'
+import { Skeleton } from '../components/ui/Skeleton'
+
+const transitions: Record<string, Set<string>> = {
+  pending_review: new Set(['under_review', 'evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed', 'redact']),
+  under_review: new Set(['evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed', 'redact']),
+  evidence_requested: new Set(['under_review', 'substantiated', 'inconclusive', 'rejected', 'removed', 'redact']),
+  substantiated: new Set(['removed', 'redact', 'inconclusive']),
+  inconclusive: new Set(['removed', 'redact', 'substantiated']),
+  rejected: new Set(['removed', 'redact']),
+  removed: new Set(),
+}
+
+const actionToTarget: Record<ModerationActionType, string> = {
+  approve: 'substantiated',
+  reject: 'rejected',
+  mark_inconclusive: 'inconclusive',
+  request_evidence: 'evidence_requested',
+  remove: 'removed',
+  redact: 'under_review',
+}
+
+function canDo(status: string, action: ModerationActionType) {
+  const target = actionToTarget[action]
+  if (action === 'redact') return transitions[status]?.has('redact') ?? false
+  if (action === 'mark_inconclusive' && status === 'inconclusive') return false
+  return transitions[status]?.has(target) ?? false
+}
+
+export function Admin() {
+  const { t } = useTranslation()
+  const [tab, setTab] = useState<'reports' | 'ratings' | 'appeals' | 'audit'>('reports')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [items, setItems] = useState<AdminReport[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [action, setAction] = useState<ModerationActionType>('approve')
+  const [reason, setReason] = useState('')
+  const [publicSummary, setPublicSummary] = useState('')
+  const [privateNote, setPrivateNote] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+
+  const [appeals, setAppeals] = useState<AdminAppeal[]>([])
+  const [appealsLoading, setAppealsLoading] = useState(false)
+  const [appealsError, setAppealsError] = useState<string | null>(null)
+  const [appealSelectedId, setAppealSelectedId] = useState<string | null>(null)
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await adminListReports(statusFilter || undefined)
+      setItems(res.items || [])
+    } catch {
+      setError(t('admin.reports.loadError', { defaultValue: 'Unable to load moderation queue. You may not have permission or the service is unavailable.' }))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadAppeals() {
+    setAppealsLoading(true)
+    setAppealsError(null)
+    try {
+      const res = await adminListAppeals()
+      setAppeals(res.items || [])
+    } catch {
+      setAppealsError(t('admin.appeals.loadError', { defaultValue: 'Unable to load appeals queue.' }))
+    } finally {
+      setAppealsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (tab === 'reports') void load()
+    if (tab === 'appeals') void loadAppeals()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, statusFilter])
+
+  const selected = useMemo(() => items.find((i) => i.id === selectedId) || null, [items, selectedId])
+  const selectedAppeal = useMemo(() => appeals.find((a) => a.id === appealSelectedId) || null, [appeals, appealSelectedId])
+
+  function openAppealReport(appeal: AdminAppeal) {
+    const r = appeal.report
+    if (!r) return
+    setItems((prev) => (prev.some((i) => i.id === r.id) ? prev.map((i) => (i.id === r.id ? { ...i, ...r } : i)) : [r, ...prev]))
+    setSelectedId(r.id)
+    setTab('reports')
+  }
+
+  async function submitAction() {
+    if (!selected) return
+    setActionError(null)
+    if (reason.trim().length < 3) {
+      setActionError('A reason is required (minimum 3 characters).')
+      return
+    }
+    if (action === 'remove' && !confirmRemove) {
+      setActionError('Please confirm the removal action.')
+      return
+    }
+    setSaving(true)
+    try {
+      const updated = await adminModerateReport(selected.id, {
+        action,
+        reason: reason.trim(),
+        public_summary: publicSummary.trim() || undefined,
+        private_note: privateNote.trim() || undefined,
+      })
+      setItems((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)))
+      setReason('')
+      setPrivateNote('')
+      setConfirmRemove(false)
+    } catch (err) {
+      if (err instanceof HttpError) setActionError(err.problem?.detail || err.message)
+      else setActionError('Moderation action failed.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const allowed = selected ? (['approve', 'reject', 'mark_inconclusive', 'request_evidence', 'remove', 'redact'] as ModerationActionType[]).filter((a) => canDo(selected.moderation_status, a)) : []
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-heading">Admin / Moderation</h1>
+        <p className="mt-2 text-muted">Role-gated moderation tools. Actions are auditable; provide clear reasons.</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {(['reports', 'ratings', 'appeals', 'audit'] as const).map((t) => (
+          <button key={t} type="button" onClick={() => setTab(t)} className={`rounded-lg border px-3 py-2 text-sm font-medium ${tab === t ? 'border-caramel bg-caramel/20 text-heading' : 'border-border bg-surface text-text'}`}>
+            {t === 'reports' ? 'Reports queue' : t === 'ratings' ? 'Rating review' : t === 'appeals' ? 'Appeals' : 'Audit log'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'appeals' ? (
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <section className="rounded-xl border border-border bg-surface p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-heading">{t('admin.appeals.queue', { defaultValue: 'Appeals queue' })}</h2>
+              <button type="button" onClick={loadAppeals} className="rounded border border-border px-3 py-1.5 text-sm">{t('common.retry', { defaultValue: 'Refresh' })}</button>
+            </div>
+            <p className="mb-3 text-sm text-muted">{t('admin.appeals.note', { defaultValue: 'Appeals are submitted by report owners. Review the message and linked report, then take an appropriate moderation action on the report.' })}</p>
+            {appealsLoading ? <div className="space-y-2"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div> : appealsError ? <ErrorState message={appealsError} /> : appeals.length === 0 ? <p className="text-sm text-muted">{t('admin.appeals.empty', { defaultValue: 'No appeals found.' })}</p> : (
+              <ul className="space-y-2">
+                {appeals.map((a) => (
+                  <li key={a.id}>
+                    <button type="button" onClick={() => setAppealSelectedId(a.id)} className={`w-full rounded-lg border p-3 text-left ${appealSelectedId === a.id ? 'border-caramel bg-caramel/10' : 'border-border bg-surface'}`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-heading">{a.report?.company_name || t('admin.appeals.unknownReport', { defaultValue: 'Report' })}</span>
+                        {a.report?.moderation_status && <span className="text-xs text-muted">{a.report.moderation_status}</span>}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted">{a.message || '—'}</p>
+                      <p className="mt-1 text-xs text-muted">{a.submitted_at || ''}</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-xl border border-border bg-surface p-4">
+            <h2 className="text-lg font-semibold text-heading">{t('admin.appeals.detail', { defaultValue: 'Appeal detail' })}</h2>
+            {!selectedAppeal ? (
+              <p className="mt-2 text-sm text-muted">{t('admin.appeals.select', { defaultValue: 'Select an appeal to review.' })}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                <div className="rounded-lg border border-border bg-surface2/30 p-3 text-sm">
+                  <p><strong>{t('admin.appeals.appealId', { defaultValue: 'Appeal ID' })}:</strong> {selectedAppeal.id}</p>
+                  <p><strong>{t('admin.appeals.reportId', { defaultValue: 'Report ID' })}:</strong> {selectedAppeal.report_id}</p>
+                  <p><strong>{t('admin.appeals.submittedAt', { defaultValue: 'Submitted' })}:</strong> {selectedAppeal.submitted_at || '—'}</p>
+                </div>
+                <div>
+                  <h3 className="mb-1 font-medium text-heading">{t('admin.appeals.message', { defaultValue: 'Appeal message' })}</h3>
+                  <div className="rounded border border-border bg-surface p-2 text-sm whitespace-pre-wrap">{selectedAppeal.message || '—'}</div>
+                </div>
+                {selectedAppeal.report ? (
+                  <div className="space-y-2 rounded-lg border border-border p-3 text-sm">
+                    <h3 className="font-medium text-heading">{t('admin.appeals.linkedReport', { defaultValue: 'Linked report' })}</h3>
+                    <p><strong>{t('admin.appeals.company', { defaultValue: 'Company' })}:</strong> {selectedAppeal.report.company_name}</p>
+                    <p><strong>{t('admin.appeals.status', { defaultValue: 'Status' })}:</strong> {selectedAppeal.report.moderation_status}</p>
+                    <p><strong>{t('admin.appeals.category', { defaultValue: 'Category' })}:</strong> {selectedAppeal.report.category}</p>
+                    <button type="button" onClick={() => openAppealReport(selectedAppeal)} className="mt-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium">
+                      {t('admin.appeals.openReport', { defaultValue: 'Open report in moderation queue' })}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted">{t('admin.appeals.missingReport', { defaultValue: 'Linked report details are unavailable.' })}</p>
+                )}
+              </div>
+            )}
+          </section>
+        </div>
+      ) : tab !== 'reports' ? (
+        <section className="rounded-xl border border-border bg-surface p-6">
+          <h2 className="text-lg font-semibold text-heading capitalize">{tab}</h2>
+          <p className="mt-2 text-sm text-muted">
+            {tab === 'audit'
+              ? t('admin.audit.unavailable', { defaultValue: 'Audit log viewing endpoint is not available in this build. Moderation actions are recorded server-side.' })
+              : t('admin.ratings.unavailable', { defaultValue: 'Rating review/duplicate-spam clustering endpoints are not available in this build.' })}
+          </p>
+        </section>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <section className="rounded-xl border border-border bg-surface p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-heading">Moderation queue</h2>
+              <button type="button" onClick={load} className="rounded border border-border px-3 py-1.5 text-sm">Refresh</button>
+            </div>
+            <div className="mb-3">
+              <label htmlFor="status-filter" className="mb-1 block text-sm font-medium text-heading">Filter by status</label>
+              <select id="status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5">
+                <option value="">All</option>
+                {['pending_review', 'under_review', 'evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed'].map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            {loading ? <div className="space-y-2"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div> : error ? <ErrorState message={error} /> : items.length === 0 ? <p className="text-sm text-muted">No reports found.</p> : (
+              <ul className="space-y-2">
+                {items.map((r) => (
+                  <li key={r.id}>
+                    <button type="button" onClick={() => setSelectedId(r.id)} className={`w-full rounded-lg border p-3 text-left ${selectedId === r.id ? 'border-caramel bg-caramel/10' : 'border-border bg-surface'}`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-heading">{r.company_name}</span>
+                        <span className="text-xs text-muted">{r.category}</span>
+                        <StatusLabel status={r.moderation_status === 'substantiated' ? 'checked' : r.moderation_status === 'inconclusive' ? 'inconclusive' : r.moderation_status === 'rejected' || r.moderation_status === 'removed' ? 'warning' : 'under_review'} />
+                        {r.pii_flagged && <span className="rounded bg-danger/10 px-2 py-0.5 text-xs text-danger">PII flagged</span>}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted">{r.description}</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-xl border border-border bg-surface p-4">
+            <h2 className="text-lg font-semibold text-heading">Report detail & actions</h2>
+            {!selected ? (
+              <p className="mt-2 text-sm text-muted">Select a report to review.</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                <div className="rounded-lg border border-border bg-surface2/30 p-3 text-sm">
+                  <p><strong>ID:</strong> {selected.id}</p>
+                  <p><strong>Status:</strong> {selected.moderation_status}</p>
+                  <p><strong>Company:</strong> {selected.company_name}</p>
+                  <p><strong>Category:</strong> {selected.category}</p>
+                  <p><strong>Job:</strong> {selected.job_title || '—'} {selected.job_url ? `(${selected.job_url})` : ''}</p>
+                  <p><strong>Recruiter identifier:</strong> {selected.recruiter_identifier || '—'}</p>
+                  <p><strong>PII flagged:</strong> {selected.pii_flagged ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <h3 className="mb-1 font-medium text-heading">Original description (moderator view)</h3>
+                  <div className="max-h-48 overflow-auto rounded border border-border bg-surface p-2 text-sm whitespace-pre-wrap">{selected.description}</div>
+                </div>
+                <div>
+                  <h3 className="mb-1 font-medium text-heading">Current public summary</h3>
+                  <div className="rounded border border-border bg-surface p-2 text-sm">{selected.public_summary || '—'}</div>
+                </div>
+
+                <div className="space-y-3 rounded-lg border border-border p-3">
+                  <h3 className="font-medium text-heading">Moderation action</h3>
+                  <div>
+                    <label htmlFor="action" className="mb-1 block text-sm font-medium">Action</label>
+                    <select id="action" value={action} onChange={(e) => setAction(e.target.value as ModerationActionType)} className="w-full rounded-lg border border-border bg-surface p-2.5">
+                      {(['approve', 'reject', 'mark_inconclusive', 'request_evidence', 'remove', 'redact'] as ModerationActionType[]).map((a) => (
+                        <option key={a} value={a} disabled={!canDo(selected.moderation_status, a)}>
+                          {a}{!canDo(selected.moderation_status, a) ? ' (invalid transition)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {allowed.length === 0 && <p className="mt-1 text-xs text-danger">No valid transitions from current status.</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="reason" className="mb-1 block text-sm font-medium">Reason (required)</label>
+                    <textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={3} />
+                  </div>
+                  <div>
+                    <label htmlFor="pubsum" className="mb-1 block text-sm font-medium">Public summary (redacted, neutral)</label>
+                    <textarea id="pubsum" value={publicSummary} onChange={(e) => setPublicSummary(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={3} placeholder="Required for public visibility; use neutral, redacted wording." />
+                  </div>
+                  <div>
+                    <label htmlFor="pnote" className="mb-1 block text-sm font-medium">Private note (moderators only)</label>
+                    <textarea id="pnote" value={privateNote} onChange={(e) => setPrivateNote(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={2} />
+                    <p className="mt-1 text-xs text-muted">Private notes are not shown to non-moderators.</p>
+                  </div>
+                  {action === 'remove' && (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={confirmRemove} onChange={(e) => setConfirmRemove(e.target.checked)} />
+                      I confirm this removal/destructive moderation action.
+                    </label>
+                  )}
+                  {actionError && <div role="alert" className="rounded border border-danger/30 bg-danger/10 p-2 text-sm text-danger">{actionError}</div>}
+                  <button type="button" onClick={submitAction} disabled={saving || !canDo(selected.moderation_status, action)} className="rounded-lg bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-50">
+                    {saving ? 'Applying…' : 'Apply action'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  )
+}

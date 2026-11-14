@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* VERITORA - Coffee-inspired premium palette (Light default).
+       Text-bearing tokens are chosen so that every foreground/background
+       pair below meets WCAG 2 AA (>= 4.5:1). See src/theme/contrast.test.ts,
+       which enforces this and fails the build if a token regresses. */
+    --color-espresso: 59 36 27;
+    --color-cream: 245 235 221;
+    --color-caramel: 197 139 88;
+    --color-latte: 230 203 169;
+    --color-mocha: 105 78 57;
+    --color-sage: 84 100 74;
+
+    --color-bg: 245 235 221;
+    --color-surface: 245 235 221;
+    --color-surface-2: 230 203 169;
+    --color-text: 99 74 57;
+    --color-heading: 59 36 27;
+    --color-muted: 105 78 57;
+    --color-border: 230 203 169;
+    --color-accent: 132 82 42;
+    --color-accent-2: 105 78 57;
+    --color-primary: 59 36 27;
+    --color-button-bg: 197 139 88;
+    --color-button-text: 36 23 15;
+    --color-danger: 158 52 50;
+    --color-warning: 132 78 12;
+    --color-success: 84 100 74;
+    --color-neutral: 105 78 57;
+  }
+  .dark {
+    /* `cream` stays a LIGHT colour in both themes: it is used as foreground
+       text on the dark `espresso` header. Redefining it as a dark colour
+       made the header navigation unreadable in dark mode. */
+    --color-espresso: 59 36 27;
+    --color-cream: 245 235 221;
+    --color-caramel: 197 139 88;
+    --color-latte: 66 48 38;
+    --color-mocha: 190 158 128;
+    --color-sage: 134 148 118;
+
+    --color-bg: 28 22 18;
+    --color-surface: 36 28 22;
+    --color-surface-2: 48 38 30;
+    --color-text: 214 198 180;
+    --color-heading: 245 235 221;
+    --color-muted: 170 148 128;
+    --color-border: 82 64 50;
+    --color-accent: 197 139 88;
+    --color-accent-2: 149 117 91;
+    --color-primary: 59 36 27;
+    --color-button-bg: 197 139 88;
+    --color-button-text: 36 23 15;
+    --color-danger: 222 138 136;
+    --color-warning: 226 170 90;
+    --color-success: 134 148 118;
+    --color-neutral: 149 117 91;
+  }
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-bg text-text antialiased;
+    font-family: 'Inter', 'Manrope', 'Noto Sans Devanagari', system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-heading;
+  }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    @apply outline-none ring-2 ring-caramel ring-offset-2 ring-offset-bg;
+  }
+}
+
+/* NFR-A11Y-1: honour the user's reduced-motion preference. This covers the
+   animate-pulse skeletons, hover transitions and any future animation without
+   needing every component to opt in. */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .skip-link {
+    /* `caramel` + `buttonText` keeps >= 4.5:1; `accent` + dark text did not. */
+    @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-caramel focus:px-3 focus:py-2 focus:text-buttonText;
+  }
+}

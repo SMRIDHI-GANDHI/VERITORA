@@ -1,0 +1,96 @@
+version: "rules-2026.11.1"
+
+signals:
+  UPFRONT_PAYMENT:
+    severity: high
+    confidence: high
+    explanation: "The text asks the candidate to pay money or a fee as part of the process."
+    # match in normalized text (lowercase, nfkc, collapsed whitespace)
+    patterns:
+      - '(pay|deposit|submit|transfer|send).{0,40}(rs\.?|inr|₹)?\s*\d[\d,]*(?:\.\d+)?\s*(registration|processing|training|security|joining|confirmation)?\s*(fee|fees|charge|charges|amount|deposit|money)'
+      - '(registration|processing|training|security|joining|confirmation)\s*(fee|fees|charge|charges).{0,30}(pay|deposit|submit|transfer|send|rs\.?|inr|₹|\d)'
+      - '(pay|deposit|submit|transfer|send).{0,20}(registration|processing|training|security|joining|confirmation)\s*(fee|fees)'
+      - '(fee|fees|deposit|security money).{0,40}(to confirm|for selection|before joining|to proceed)'
+      - '(paise|fees? bharna|paisa jama|registration ke liye paise)'
+    negations:
+      - 'never charge any fee'
+      - 'no fee'
+      - 'no fees'
+      - 'do not charge'
+      - "we don't charge"
+      - 'without any fee'
+      - 'free of cost'
+
+  GUARANTEED_SELECTION:
+    severity: medium
+    confidence: medium
+    explanation: "The text promises guaranteed selection or placement without a normal process."
+    patterns:
+      - '100%\s*(placement|selection|job|guarantee)'
+      - 'guaranteed\s*(job|placement|selection|offer)'
+      - 'no interview needed'
+      - 'without interview'
+      - 'direct (selection|joining)'
+    negations: []
+
+  ARTIFICIAL_URGENCY:
+    severity: medium
+    confidence: medium
+    explanation: "The text creates pressure to act immediately."
+    patterns:
+      - 'within\s*(24|48)\s*hours?'
+      - 'pay (today|now|immediately)'
+      - 'last seat'
+      - 'limited seats?'
+      - 'reply immediately'
+      - 'urgent(ly)?\s*(reply|respond|pay|confirm)'
+      - 'offer expires'
+    negations: []
+
+  UNREALISTIC_COMPENSATION:
+    severity: medium
+    confidence: low
+    explanation: "The offered compensation may be unrealistic for the role/experience; verify independently."
+    patterns:
+      - '(earn|salary|income|stipend).{0,30}(₹|rs\.?|inr)\s*[5-9]\d{4,}'
+      - '(₹|rs\.?|inr)\s*\d{1,2}\s*(lakh|lac).{0,30}(fresher|no experience|student)'
+    negations: []
+
+  VAGUE_EMPLOYER_OR_ROLE:
+    severity: low
+    confidence: medium
+    explanation: "The employer identity or role responsibilities are unclear."
+    patterns:
+      - '\b(mnc|reputed company|top company)\b.{0,40}(hiring|looking for)'
+      - '\b(various roles|multiple positions)\b'
+      - '\b(work from home opportunity)\b'
+    negations: []
+
+  SENSITIVE_DATA_REQUEST:
+    severity: high
+    confidence: medium
+    explanation: "The text requests sensitive personal or financial information."
+    patterns:
+      - '\b(otp|one time password)\b'
+      - '\b(password|banking credentials?)\b'
+      - '\b(aadhaar|aadhar|pan card|passport number|bank account|ifsc|upi pin)\b'
+      - '\b(send|share|provide).{0,20}(aadhaar|aadhar|pan|passport|bank details|otp|password)\b'
+    negations: []
+
+  CONTRADICTION:
+    severity: low
+    confidence: low
+    explanation: "Some details in the posting appear inconsistent; verify carefully."
+    patterns: []
+    negations: []
+
+  OFFPLATFORM_CONTACT:
+    severity: low
+    confidence: medium
+    explanation: "The text asks to move communication off official channels."
+    patterns:
+      - '\b(whatsapp|telegram)\b.{0,30}(message|contact|send|chat)'
+      - '(contact|message).{0,30}\b(whatsapp|telegram)\b'
+      - '\bpersonal email\b'
+      - '\bgmail\.com\b.{0,20}(official|hr|recruiter)'
+    negations: []

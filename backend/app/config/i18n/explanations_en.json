@@ -1,0 +1,31 @@
+{
+  "recommendations": {
+    "DO_NOT_PAY": "Do not pay any fee or deposit. Verify the employer and hiring process independently before taking action.",
+    "CHECK_DOMAIN_BEFORE_ENTERING_DATA": "Check the website domain carefully before entering any personal information.",
+    "VERIFY_RECRUITER_OFFICIAL_CHANNEL": "Verify the recruiter through the company's independently sourced official contact channels.",
+    "ASK_WHY_DATA_NEEDED": "Ask why sensitive information is needed and share only the minimum necessary at the appropriate stage.",
+    "CONFIRM_OFFER_WITH_COMPANY": "Confirm the offer details directly with the company through official, independently verified channels.",
+    "CONTACT_1930_IF_PAID": "If you have already sent money, contact the 1930 cybercrime helpline promptly and report through the official portal.",
+    "NEVER_SHARE_CREDENTIALS": "Never share passwords, OTPs, banking credentials, or remote-access codes with anyone.",
+    "VERIFY_COMPANY_IDENTITY": "Verify the company's identity using independent, official sources."
+  },
+  "factors": {
+    "UPFRONT_PAYMENT": "The text asks the candidate to pay money or a fee as part of the process.",
+    "GUARANTEED_SELECTION": "The text promises guaranteed selection or placement without a normal process.",
+    "ARTIFICIAL_URGENCY": "The text creates pressure to act immediately.",
+    "UNREALISTIC_COMPENSATION": "The offered compensation may be unrealistic for the role or experience; verify independently.",
+    "VAGUE_EMPLOYER_OR_ROLE": "The employer identity or role responsibilities are unclear.",
+    "SENSITIVE_DATA_REQUEST": "The text requests sensitive personal or financial information.",
+    "CONTRADICTION": "Some details in the posting appear inconsistent; verify carefully.",
+    "OFFPLATFORM_CONTACT": "The text asks to move communication off official channels.",
+    "OFFER_CONTACT_MISMATCH": "Contact details in the offer do not align with independently verified company or recruiter information.",
+    "COMPANY_DOMAIN_MISMATCH": "The company name and website/domain do not appear consistent.",
+    "RECRUITER_AFFILIATION_MISMATCH": "Recruiter details do not clearly align with the claimed company.",
+    "SUSPICIOUS_URL": "The link or domain appears suspicious and should be verified before use.",
+    "REPEATED_IDENTIFIER": "Related identifiers appear across multiple records, which may warrant review.",
+    "COMMUNITY_REPORTS_EXIST": "Approved community reports exist; treat them as user-submitted information, not verified facts."
+  },
+  "disclaimer": {
+    "decision_support": "This is a decision-support assessment, not a legal finding or verdict. Verify information independently."
+  }
+}

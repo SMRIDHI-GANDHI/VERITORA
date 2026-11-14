@@ -1,0 +1,46 @@
+{
+  "country": "IN",
+  "disclaimer_key": "cyber.not_official_portal",
+  "reviewed_at": "2026-11-10",
+  "resources": [
+    {
+      "id": "ncrp",
+      "type": "portal",
+      "label": "National Cyber Crime Reporting Portal",
+      "url": "https://cybercrime.gov.in/",
+      "primary": true
+    },
+    {
+      "id": "helpline_1930",
+      "type": "phone",
+      "label": "Cybercrime helpline (financial cyber fraud)",
+      "tel": "1930",
+      "href": "tel:1930",
+      "primary": true
+    },
+    {
+      "id": "certin",
+      "type": "website",
+      "label": "CERT-In",
+      "url": "https://www.cert-in.org.in/"
+    },
+    {
+      "id": "certin_contact",
+      "type": "website",
+      "label": "CERT-In incident response contact",
+      "url": "https://www.cert-in.org.in/s2cMainServlet?pageid=CONTACTUS"
+    },
+    {
+      "id": "certin_email",
+      "type": "email",
+      "label": "CERT-In incident email",
+      "email": "incident@cert-in.org.in"
+    },
+    {
+      "id": "certin_tollfree",
+      "type": "phone",
+      "label": "CERT-In toll-free",
+      "tel": "1800-11-4949"
+    }
+  ]
+}

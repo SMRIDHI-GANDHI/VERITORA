@@ -1,0 +1,263 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "trustscan": "TrustScan",
+    "reports": "Reports",
+    "help": "Report Cybercrime",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "messageAnalyzer": "Message Analyzer",
+    "communityReports": "Community Reports",
+    "history": "Analysis History",
+    "saved": "Saved Opportunities",
+    "settings": "Profile & Settings",
+    "admin": "Admin",
+    "adminReports": "Admin: Reports",
+    "adminNetwork": "Admin: Network",
+    "adminWatchlist": "Admin: Watchlist",
+    "adminTrends": "Admin: Trends",
+    "myPassports": "My Passports"
+  },
+  "analyze": {
+    "message": {
+      "resultTitle": "Conversation analysis",
+      "decisionSupport": "Decision support, not a verdict.",
+      "decisionSupportBody": "This is a risk indicator based on the messages you provided, not a finding about any person or company.",
+      "riskIndicator": "Risk indicator: {{score}} / 100",
+      "noScore": "No numeric score: not enough information to assess reliably.",
+      "summaryFallback": "Conversation analyzed for warning signs and escalation patterns.",
+      "transcript": "Conversation with highlighted evidence",
+      "highlightNote": "Highlighted phrases triggered the factors listed under each message. Conversation text is treated as data, never as instructions.",
+      "messageN": "Message {{n}}",
+      "sender": "Sender: {{sender}}",
+      "noMessageFactors": "No warning signs detected in this message.",
+      "severity": "Severity: {{value}}",
+      "confidence": "Confidence: {{value}}",
+      "excerpt": "Excerpt: {{text}}",
+      "escalation": "Escalation across the conversation",
+      "escalationNote": "A delayed payment request or rising pressure across messages is a signal for review, not proof of wrongdoing.",
+      "otherFactors": "Other signals",
+      "noFactors": "No specific risk factors detected from the provided information.",
+      "recommendations": "Recommendations",
+      "noRecommendations": "No recommendations available.",
+      "cyberHelp": "If money was sent, act quickly",
+      "call1930": "Call 1930",
+      "reportCyber": "Report Cybercrime",
+      "unknowns": "Unknowns and missing information",
+      "unknownsLabel": "Unknowns",
+      "missingLabel": "Missing information to verify",
+      "none": "None",
+      "noUnknowns": "No additional unknowns reported."
+    },
+    "result": {
+      "translator": {
+        "title": "Translator panel",
+        "intro": "View explanations in another language. Original text is always shown alongside translation. Machine-translated content may be inaccurate.",
+        "languageLabel": "Explanation language",
+        "english": "English",
+        "hindi": "Hindi",
+        "translate": "Translate explanations",
+        "translating": "Translating…",
+        "machineBadge": "Machine translated, may be inaccurate",
+        "original": "Original",
+        "translated": "Translated ({{language}})",
+        "uncertain": "Uncertain translation",
+        "wording": {
+          "title": "Wording check",
+          "intro": "Highlight payment, urgency, secrecy, guarantee, or off-channel phrases in the evidence and read a plain-language explanation.",
+          "empty": "No evidence excerpts are available to explain.",
+          "explain": "Explain evidence wording",
+          "recheck": "Re-run wording check",
+          "loading": "Checking wording…",
+          "error": "Wording explanation is unavailable right now. Original evidence is still shown below.",
+          "excerptError": "Could not explain this excerpt. The original wording is shown above.",
+          "explanations": "Plain-language explanations",
+          "clause": "Phrase",
+          "confidence": "Confidence",
+          "ruleBased": "Rule-based",
+          "note": "These explanations are decision support, not a verdict. Evidence wording is treated as data, never as instructions."
+        }
+      }
+    }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Decision support, not a verdict",
+      "title": "Check before you trust.",
+      "body": "VERITORA helps you spot warning signs in job posts, recruiter messages, companies, and offers — with evidence, unknowns, and next steps.",
+      "primaryCta": "Run a quick check",
+      "secondaryCta": "Verify a company",
+      "dashboardCta": "Open dashboard"
+    },
+    "quickCheck": {
+      "title": "Quick check",
+      "label": "Paste a job post, recruiter message, or link",
+      "placeholder": "Paste the text here, or a public job-post URL…",
+      "help": "Never paste passwords, OTPs, banking details, or unredacted ID numbers.",
+      "submit": "Check it",
+      "caveat": "Results are decision support and may be incomplete. Missing data is shown as unknown.",
+      "required": "Paste a job post, message, or link to check."
+    },
+    "outputs": {
+      "title": "What you get",
+      "riskTitle": "A risk indicator, not a verdict",
+      "riskBody": "A 0–100 indicator and a plain band: Lower, Moderate, High, Very high, or Insufficient information.",
+      "evidenceTitle": "Evidence and sources",
+      "evidenceBody": "Each factor shows the phrase that triggered it, with source and checked time when external checks run.",
+      "unknownsTitle": "Unknowns and next steps",
+      "unknownsBody": "Missing data stays unknown. You get practical steps to verify independently before you act."
+    },
+    "paths": {
+      "title": "Start with the right check",
+      "job": "Check a job post",
+      "jobBody": "Paste a description or scan a public post for warning signs.",
+      "company": "Verify a company",
+      "companyBody": "Compare names, domains, and registration details against available sources.",
+      "message": "Analyze a conversation",
+      "messageBody": "Highlight pressure and payment requests across recruiter messages.",
+      "recruiter": "Check a recruiter",
+      "recruiterBody": "Review affiliation evidence, mismatches, and unknowns."
+    },
+    "safety": {
+      "title": "Already paid or shared credentials?",
+      "body": "Contact the official cybercrime channels immediately. VERITORA does not recover money or investigate crimes.",
+      "cta": "Open cybercrime help"
+    },
+    "principles": {
+      "title": "How VERITORA is different",
+      "allegations": "Community reports are user allegations pending moderation. There is no public blacklist.",
+      "privacy": "External text is treated as untrusted data, never as instructions.",
+      "rules": "Core checks work without an LLM; every external claim stores its source and checked time."
+    }
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist, was moved, or the link is incomplete.",
+    "home": "Go to home",
+    "dashboard": "Open dashboard",
+    "signin": "Sign in",
+    "cyber": "Report cybercrime"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "hi": "हिन्दी"
+  },
+  "explanation": {
+    "label": "Explanation language"
+  },
+  "common": {
+    "skipToContent": "Skip to content",
+    "disclaimer": "VERITORA is a decision-support tool. It does not provide legal findings or guarantees.",
+    "loading": "Loading",
+    "empty": "No data available",
+    "error": "Something went wrong",
+    "retry": "Retry"
+  },
+  "cyber": {
+    "title": "Report Cybercrime",
+    "notOfficial": "VERITORA is not the official portal and does not file complaints on your behalf.",
+    "primary": "Primary routes",
+    "certin": "CERT-In (incident response)",
+    "certinNote": "CERT-In is an incident-response body and is not a replacement for a police or cybercrime complaint."
+  },
+  "status": {
+    "checked": "Checked",
+    "warning": "Warning",
+    "inconclusive": "Inconclusive",
+    "not_checked": "Not checked",
+    "under_review": "Under review"
+  },
+  "trustscan": {
+    "title": "TrustScan",
+    "subtitle": "One opportunity. Complete verification.",
+    "description": "Analyze job postings, verify company credibility and assess recruiter authenticity before taking your next career step."
+  },
+  "admin": {
+    "trends": {
+      "title": "Trends & early warning",
+      "subtitle": "Weekly counts of moderator-approved community reports. Trends are signals for review, not findings.",
+      "window": "Reporting window",
+      "weeks": "{{count}} weeks",
+      "summary": "Summary",
+      "total": "Approved reports",
+      "rising": "Rising categories",
+      "weekly": "Weekly approved reports",
+      "weekStart": "Week starting",
+      "count": "Approved reports",
+      "category": "Category",
+      "previous": "Previous week",
+      "current": "Latest complete week",
+      "delta": "Change",
+      "byCategory": "Approved reports by category",
+      "notes": "Notes",
+      "empty": "No approved reports in this window yet.",
+      "noRising": "No category is rising week over week.",
+      "loadError": "Unable to load trend analytics. You may not have permission or the service is unavailable.",
+      "forbidden": "You do not have permission to view trend analytics.",
+      "generatedAt": "Generated at",
+      "chartLabel": "Approved reports per week",
+      "disclaimer": "Counts include approved reports only and are not evidence of wrongdoing."
+    },
+    "reports": {
+      "loadError": "Unable to load moderation queue. You may not have permission or the service is unavailable."
+    },
+    "appeals": {
+      "queue": "Appeals queue",
+      "note": "Appeals are submitted by report owners. Review the message and linked report, then take an appropriate moderation action on the report.",
+      "loadError": "Unable to load appeals queue.",
+      "empty": "No appeals found.",
+      "detail": "Appeal detail",
+      "select": "Select an appeal to review.",
+      "appealId": "Appeal ID",
+      "reportId": "Report ID",
+      "submittedAt": "Submitted",
+      "message": "Appeal message",
+      "linkedReport": "Linked report",
+      "company": "Company",
+      "status": "Status",
+      "category": "Category",
+      "openReport": "Open report in moderation queue",
+      "unknownReport": "Report",
+      "missingReport": "Linked report details are unavailable."
+    },
+    "audit": {
+      "unavailable": "Audit log viewing endpoint is not available in this build. Moderation actions are recorded server-side."
+    },
+    "ratings": {
+      "unavailable": "Rating review/duplicate-spam clustering endpoints are not available in this build."
+    }
+  },
+  "passports": {
+    "title": "My Passports",
+    "subtitle": "Trust Passports are shareable, time-limited snapshots for decision support (not certificates). You can revoke an active passport at any time. Share links are shown only when created.",
+    "listTitle": "Your passports",
+    "loadError": "Unable to load your passports.",
+    "empty": "No passports yet. Create one from an analysis result to share a snapshot.",
+    "revoked": "Passport revoked.",
+    "revokeError": "Unable to revoke passport.",
+    "passport": "Passport",
+    "created": "Created",
+    "expires": "Expires",
+    "revokedAt": "Revoked",
+    "rules": "Rules",
+    "indicator": "Indicator",
+    "viewAnalysis": "View analysis",
+    "revoke": "Revoke",
+    "revoking": "Revoking…",
+    "noLink": "For security, the share token/link is shown only once at creation time and is not stored in retrievable form.",
+    "status": {
+      "active": "Active",
+      "revoked": "Revoked",
+      "expired": "Expired"
+    }
+  }
+}

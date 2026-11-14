@@ -1,0 +1,34 @@
+version: "rules-2026.11.1"
+
+severity_mult:
+  info: 0.0
+  low: 0.4
+  medium: 0.7
+  high: 1.0
+
+confidence_mult:
+  low: 0.4
+  medium: 0.7
+  high: 1.0
+
+weights:
+  UPFRONT_PAYMENT: 70
+  GUARANTEED_SELECTION: 25
+  ARTIFICIAL_URGENCY: 15
+  UNREALISTIC_COMPENSATION: 25
+  VAGUE_EMPLOYER_OR_ROLE: 12
+  SENSITIVE_DATA_REQUEST: 55
+  CONTRADICTION: 15
+  OFFPLATFORM_CONTACT: 10
+  COMPANY_DOMAIN_MISMATCH: 40
+  RECRUITER_AFFILIATION_MISMATCH: 25
+  SUSPICIOUS_URL: 35
+  REPEATED_IDENTIFIER: 30
+  COMMUNITY_REPORTS_EXIST: 5
+  OFFER_CONTACT_MISMATCH: 45
+
+bands:
+  lower: [0, 24]
+  moderate: [25, 49]
+  high_concern: [50, 74]
+  very_high_concern: [75, 100]

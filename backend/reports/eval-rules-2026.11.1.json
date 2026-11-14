@@ -1,0 +1,57 @@
+{
+  "rules_version": "rules-2026.11.1",
+  "set": "payment_v1",
+  "generated_at": "2026-11-10T17:38:07.012170+00:00",
+  "counts": {
+    "tp": 16,
+    "fp": 3,
+    "tn": 27,
+    "fn": 14,
+    "total": 60
+  },
+  "confusion_matrix": {
+    "tp": 16,
+    "fp": 3,
+    "fn": 14,
+    "tn": 27
+  },
+  "precision": 0.8421,
+  "recall": 0.5333,
+  "f1": 0.6531,
+  "per_language": {
+    "en": {
+      "precision": 0.9167,
+      "recall": 0.55,
+      "f1": 0.6875,
+      "support": 42
+    },
+    "hi": {
+      "precision": 0.7143,
+      "recall": 0.5,
+      "f1": 0.5882,
+      "support": 18
+    }
+  },
+  "false_positives_legitimate": [
+    "This is a legitimate opening. We do not ask for money, OTP, or passwords.",
+    "Company kabhi bhi OTP ya password nahi mangti.",
+    "Aavedan bilkul free hai, registration ke liye paise nahi dene."
+  ],
+  "false_negatives": [
+    "Submit security money of 5000 to get the offer letter immediately.",
+    "Urgent: pay within 24 hours or your seat will be given to someone else.",
+    "Last seat available, reply immediately and send registration payment.",
+    "Contact on WhatsApp for this job and pay kit charges.",
+    "Reputed MNC hiring, pay refundable deposit to start work from home.",
+    "Joining ke liye security deposit jama karein, turant payment karein.",
+    "24 ghante ke andar payment karein warna seat chali jayegi.",
+    "WhatsApp par contact karein aur processing charge bhejein.",
+    "Kindly pay a small onboarding amount to receive your appointment letter.",
+    "To hold this vacancy we request a refundable application fee.",
+    "Complete your hiring by sending money for document verification.",
+    "Document verification ke liye thoda payment bhejna zaroori hai.",
+    "Immediate joining, but first transfer fees for company ID card.",
+    "Turant joining milegi, pehle ID card ke liye fees transfer karein."
+  ],
+  "note": "Synthetic labeled set; metrics are for reporting, not silent tuning."
+}
