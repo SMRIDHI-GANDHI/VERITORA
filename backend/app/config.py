@@ -1,7 +1,16 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEV_ENVS = {"development", "dev", "test", "local"}
+PLACEHOLDER_SECRETS = {
+    "change-me-use-a-long-random-value",
+    "change-me-network-hmac-key",
+    "change-me",
+    "changeme",
+    "secret",
+}
 
 
 class Settings(BaseSettings):
@@ -23,6 +32,21 @@ class Settings(BaseSettings):
     offer_storage_dir: str = "backend/storage/offer_letters"
     offer_file_ttl_hours: int = 24
     offer_max_upload_mb: int = 5
+
+    @model_validator(mode="after")
+    def _validate_secrets(self) -> "Settings":
+        env = (self.app_env or "").strip().lower()
+        if env in DEV_ENVS:
+            return self
+        placeholders = {p.lower() for p in PLACEHOLDER_SECRETS}
+        for name in ("secret_key", "network_hmac_key"):
+            val = (getattr(self, name) or "").strip()
+            if not val or val.lower() in placeholders:
+                raise ValueError(
+                    f"Insecure default for {name} in non-development environment. "
+                    "Configure a strong secret value before starting the application."
+                )
+        return self
 
     @property
     def cors_origins_list(self) -> list[str]:

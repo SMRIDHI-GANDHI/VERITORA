@@ -4,11 +4,12 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter, rate_limit_key_user_or_ip
 from app.db.models.company import Company
 from app.db.models.user import User
 from app.db.models.verification_check import VerificationCheck
@@ -26,11 +27,14 @@ def _normalize_name(name: str) -> str:
 
 
 @router.post("/verify/company")
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def verify_company(
+    request: Request,
     payload: VerifyCompanyRequest,
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
+    _ = request
     # find or create company record (simple)
     norm_name = _normalize_name(payload.company_name)
     norm_domain = _normalize_domain(payload.website)
@@ -99,11 +103,14 @@ async def verify_company(
 
 
 @router.get("/companies/{company_id}")
+@limiter.limit("60/minute", key_func=rate_limit_key_user_or_ip)
 async def get_company(
+    request: Request,
     company_id: str,
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
+    _ = request
     try:
         cid = uuid.UUID(company_id)
     except Exception:
@@ -148,11 +155,13 @@ async def get_company(
 
 
 @router.post("/verify/recruiter")
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def verify_recruiter_endpoint(
+    request: Request,
     payload: VerifyRecruiterRequest,
     user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
     return await verify_recruiter(
         recruiter_name=payload.recruiter_name,
         claimed_company=payload.claimed_company,
@@ -164,9 +173,11 @@ async def verify_recruiter_endpoint(
 
 
 @router.post("/scan/url")
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def scan_url_endpoint(
+    request: Request,
     payload: ScanUrlRequest,
     user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
     return await scan_public_url(payload.url)

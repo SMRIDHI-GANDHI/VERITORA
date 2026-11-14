@@ -34,6 +34,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     headers.set('Content-Type', 'application/json')
   }
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
+  // Defense-in-depth for cookie-authenticated endpoints (e.g. refresh/logout)
+  if (!headers.has('X-Requested-With')) headers.set('X-Requested-With', 'XMLHttpRequest')
 
   const res = await fetch(`${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`, {
     credentials: 'include',

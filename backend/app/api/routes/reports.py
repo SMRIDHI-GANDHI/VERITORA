@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_role
+from app.core.rate_limit import limiter, rate_limit_key_user_or_ip
 from app.db.models.community_report import CommunityReport
 from app.db.models.company import Company
 from app.db.models.experience_rating import ExperienceRating
@@ -118,6 +119,7 @@ def _report_owner_view(r: CommunityReport) -> dict[str, Any]:
 
 
 @router.post("/reports", status_code=201)
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def create_report(
     request: Request,
     payload: ReportCreate,
@@ -258,6 +260,7 @@ async def delete_report(
 
 
 @router.post("/reports/{report_id}/appeal", status_code=202)
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def appeal_report(
     request: Request,
     report_id: str,
@@ -303,6 +306,7 @@ async def appeal_report(
 
 
 @router.post("/companies/{company_id}/ratings", status_code=201)
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def create_rating(
     request: Request,
     company_id: str,

@@ -4,11 +4,12 @@ import logging
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter, rate_limit_key_user_or_ip
 from app.db.models.community_report import CommunityReport
 from app.db.models.dashboard import ChecklistProgress, SavedOpportunity
 from app.db.models.job_analysis import JobAnalysis
@@ -73,11 +74,14 @@ async def get_analysis(
 
 
 @router.post("/analyses/{analysis_id}/refresh")
+@limiter.limit("20/minute", key_func=rate_limit_key_user_or_ip)
 async def refresh_analysis(
+    request: Request,
     analysis_id: str,
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
+    _ = request
     try:
         aid = uuid.UUID(analysis_id)
     except Exception:
@@ -215,11 +219,13 @@ async def get_dashboard(
 
 
 @router.post("/data-exposure/check")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def data_exposure_check(
+    request: Request,
     payload: dict[str, Any],
     user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
     items = payload.get("items")
     if items is None and isinstance(payload.get("text"), str):
         # split free text by commas/newlines
@@ -330,11 +336,14 @@ async def get_checklist(
 
 
 @router.post("/checklist")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def update_checklist(
+    request: Request,
     payload: dict[str, Any],
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
+    _ = request
     item_key = str(payload.get("item_key") or "").strip()
     if not item_key:
         raise HTTPException(status_code=422, detail="item_key is required")

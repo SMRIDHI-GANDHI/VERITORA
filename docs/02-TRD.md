@@ -10,7 +10,7 @@
 | Routing | React Router | |
 | i18n | react-i18next (en, hi at launch) | |
 | Charts / graph | Recharts; react-force-graph or Cytoscape.js for network | |
-| Backend | Python 3.12, FastAPI, Pydantic v2, Uvicorn | |
+| Backend | Python 3.12, FastAPI, Pydantic v2 (`pydantic[email]` for `EmailStr` validation/email-validator), Uvicorn | |
 | DB | PostgreSQL 16 | `pgvector` extension in Phase 2+ |
 | ORM / migrations | SQLAlchemy 2.x (typed), Alembic | |
 | Auth | Argon2 password hashing; short-lived JWT access + refresh in httpOnly cookie | |

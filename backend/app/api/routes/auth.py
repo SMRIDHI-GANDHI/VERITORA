@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
+from urllib.parse import urlparse
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -30,6 +31,49 @@ router = APIRouter(prefix="/api/v1", tags=["auth"])
 
 REFRESH_COOKIE = "refresh_token"
 REFRESH_DAYS = 14
+CSRF_HEADER = "X-Requested-With"
+
+
+def _origin_allowed(request: Request) -> bool:
+    origin = (request.headers.get("origin") or "").strip()
+    referer = (request.headers.get("referer") or "").strip()
+    source = origin or referer
+    if not source:
+        return False
+    try:
+        from app.config import get_settings
+
+        settings = get_settings()
+        parsed = urlparse(source)
+        src_origin = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+        allowed = {o.rstrip("/") for o in settings.cors_origins_list}
+        if src_origin in allowed:
+            return True
+        host = (parsed.hostname or "").lower()
+        if settings.app_env.strip().lower() not in {"production", "prod"} and host in {
+            "localhost",
+            "127.0.0.1",
+        }:
+            return True
+    except Exception:
+        return False
+    return False
+
+
+def _require_csrf(request: Request) -> None:
+    # Defense-in-depth for cookie-authenticated refresh/logout (SameSite cookie is primary).
+    # Accept: trusted browser Origin/Referer, or explicit non-simple custom header.
+    # If neither Origin nor Referer is present (non-browser/legacy clients), allow to avoid
+    # breaking legitimate flows; cross-site browser requests include an Origin.
+    if request.headers.get(CSRF_HEADER):
+        return
+    origin = (request.headers.get("origin") or "").strip()
+    referer = (request.headers.get("referer") or "").strip()
+    if not origin and not referer:
+        return
+    if _origin_allowed(request):
+        return
+    raise HTTPException(status_code=403, detail="CSRF validation failed")
 
 
 def _user_out(user: User) -> UserOut:
@@ -181,6 +225,7 @@ async def refresh_tokens(
     response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> AuthResponse:
+    _require_csrf(request)
     token = request.cookies.get(REFRESH_COOKIE)
     if not token:
         raise HTTPException(status_code=401, detail="Missing refresh token")
@@ -247,6 +292,7 @@ async def logout(
     response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> Response:
+    _require_csrf(request)
     token = request.cookies.get(REFRESH_COOKIE)
     if token:
         try:

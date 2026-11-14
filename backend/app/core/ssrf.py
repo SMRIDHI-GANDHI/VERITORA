@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipaddress
 import socket
 from dataclasses import dataclass
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlunparse
 
 import httpx
 
@@ -28,20 +28,16 @@ class SafeFetchResult:
     title: str | None
     text_snippet: str | None
     redirect_chain: list[str]
+    body_text: str | None = None
 
 
 def _is_blocked_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
-    return bool(
-        ip.is_private
-        or ip.is_loopback
-        or ip.is_link_local
-        or ip.is_reserved
-        or ip.is_multicast
-        or ip.is_unspecified
-    )
+    # ip.is_global is False for private/loopback/link-local/reserved/multicast/unspecified in stdlib
+    return not ip.is_global
 
 
-def _validate_host(host: str) -> list[str]:
+def _resolve_public_ips(host: str) -> list[str]:
+    """Resolve hostname to validated public IP strings (no DNS pinning bypass)."""
     if not host:
         raise SSRFBlockedError("Missing host")
     h = host.strip().lower().strip(".")
@@ -51,7 +47,8 @@ def _validate_host(host: str) -> list[str]:
         or h.endswith(".internal")
     ):
         raise SSRFBlockedError("Blocked hostname")
-    # if literal IP
+
+    # literal IP
     try:
         ip = ipaddress.ip_address(h)
         if _is_blocked_ip(ip):
@@ -64,37 +61,58 @@ def _validate_host(host: str) -> list[str]:
         infos = socket.getaddrinfo(h, None)
     except socket.gaierror as e:
         raise SSRFBlockedError("DNS resolution failed") from e
+
     resolved: list[str] = []
+    seen: set[str] = set()
     for _family, _, _, _, sockaddr in infos:
-        ip_str = sockaddr[0]
+        ip_str = str(sockaddr[0])
         try:
             ip = ipaddress.ip_address(ip_str)
         except ValueError:
             continue
-        # block cloud metadata explicitly
-        if str(ip) == "169.254.169.254":
-            raise SSRFBlockedError("Blocked metadata IP")
-        if _is_blocked_ip(ip):
+        if str(ip) == "169.254.169.254" or _is_blocked_ip(ip):
             raise SSRFBlockedError("Blocked resolved IP")
-        resolved.append(str(ip))
+        if ip_str not in seen:
+            seen.add(ip_str)
+            resolved.append(ip_str)
     if not resolved:
         raise SSRFBlockedError("No resolvable public IPs")
+    # prefer IPv4 for broader compatibility, but keep all public results validated
+    resolved.sort(key=lambda x: (":" in x, x))
     return resolved
 
 
-def validate_url(url: str) -> str:
+def _validate_host(host: str) -> list[str]:
+    # Backwards-compatible helper used by existing callers/tests.
+    return _resolve_public_ips(host)
+
+
+def _validated_target(url: str) -> tuple[str, str, int, str, str, list[str]]:
+    """Validate URL shape/policy and return normalized target details.
+
+    Returns (normalized_url, hostname, port, scheme, host_header, public_ips).
+    """
     parsed = urlparse(url)
-    if parsed.scheme.lower() not in ALLOWED_SCHEMES:
+    scheme = (parsed.scheme or "").lower()
+    if scheme not in ALLOWED_SCHEMES:
         raise SSRFBlockedError("Scheme not allowed")
     if parsed.username or parsed.password:
         raise SSRFBlockedError("Userinfo in URL not allowed")
     if parsed.hostname is None:
         raise SSRFBlockedError("Missing hostname")
-    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    hostname = parsed.hostname
+    port = parsed.port or (443 if scheme == "https" else 80)
     if port not in ALLOWED_PORTS:
         raise SSRFBlockedError("Port not allowed")
-    _validate_host(parsed.hostname)
-    return url
+    public_ips = _resolve_public_ips(hostname)
+    host_header = hostname if parsed.port is None else f"{hostname}:{port}"
+    # normalized logical URL keeps original hostname/target
+    return url, hostname, port, scheme, host_header, public_ips
+
+
+def validate_url(url: str) -> str:
+    normalized, _host, _port, _scheme, _hdr, _ips = _validated_target(url)
+    return normalized
 
 
 def _extract_title(html: str) -> str | None:
@@ -110,25 +128,41 @@ def _extract_title(html: str) -> str | None:
     return " ".join(title.split())[:300] if title else None
 
 
+def _pinned_request_url(url: str, ip: str) -> str:
+    parsed = urlparse(url)
+    ip_host = f"[{ip}]" if ":" in ip else ip
+    netloc = ip_host if parsed.port is None else f"{ip_host}:{parsed.port}"
+    return urlunparse(
+        (parsed.scheme, netloc, parsed.path or "", parsed.params, parsed.query, parsed.fragment)
+    )
+
+
 async def safe_fetch(url: str) -> SafeFetchResult:
-    current = validate_url(url)
-    chain = [current]
+    """Fetch a public URL safely.
+
+    Connects only to validated public IPs resolved at request time (per hop), preventing
+    DNS rebinding/TOCTOU between validation and connection. Host/SNI remain the original
+    hostname to preserve TLS certificate verification and virtual hosting.
+    """
+    logical_url, hostname, _port, scheme, host_header, ips = _validated_target(url)
+    chain = [logical_url]
     async with httpx.AsyncClient(
         follow_redirects=False,
         timeout=TIMEOUT_SECONDS,
         headers={"User-Agent": "VERITORA-SafeFetch/1.0"},
     ) as client:
         for _ in range(MAX_REDIRECTS + 1):
-            resp = await client.get(current)
+            pinned_url = _pinned_request_url(logical_url, ips[0])
+            headers = {"Host": host_header}
+            extensions = {"sni_hostname": hostname} if scheme == "https" else None
+            resp = await client.get(pinned_url, headers=headers, extensions=extensions)
             if resp.is_redirect:
                 loc = resp.headers.get("location")
                 if not loc:
                     raise SSRFBlockedError("Redirect without location")
-                nxt = urljoin(current, loc)
-                # re-validate every redirect target
-                validate_url(nxt)
-                chain.append(nxt)
-                current = nxt
+                nxt = urljoin(logical_url, loc)
+                logical_url, hostname, _port, scheme, host_header, ips = _validated_target(nxt)
+                chain.append(logical_url)
                 continue
 
             ctype = (resp.headers.get("content-type") or "").split(";")[0].strip().lower() or None
@@ -139,22 +173,26 @@ async def safe_fetch(url: str) -> SafeFetchResult:
                 raise SSRFBlockedError("Response too large")
             text = None
             title = None
+            body_text = None
             if ctype in {"text/html", "application/xhtml+xml"}:
                 try:
                     html = content.decode(resp.encoding or "utf-8", errors="ignore")
                 except Exception:
                     html = content.decode("utf-8", errors="ignore")
                 title = _extract_title(html)
+                body_text = html[: 2 * 1024 * 1024]
                 text = " ".join(html.split())[:1000]
             elif ctype == "text/plain":
-                text = content.decode("utf-8", errors="ignore")[:1000]
+                body_text = content.decode("utf-8", errors="ignore")[: 2 * 1024 * 1024]
+                text = body_text[:1000]
             return SafeFetchResult(
                 url=url,
-                final_url=str(resp.url),
+                final_url=logical_url,
                 status_code=resp.status_code,
                 content_type=ctype,
                 title=title,
                 text_snippet=text,
                 redirect_chain=chain,
+                body_text=body_text,
             )
     raise SSRFBlockedError("Too many redirects")

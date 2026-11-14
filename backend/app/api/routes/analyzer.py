@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.config import get_settings
+from app.core.rate_limit import limiter, rate_limit_key_user_or_ip
 from app.db.models.job_analysis import JobAnalysis
 from app.db.models.job_posting import JobPosting
 from app.db.models.risk_factor import RiskFactor
@@ -60,6 +61,7 @@ def _to_response(analysis: JobAnalysis) -> dict[str, Any]:
 
 
 @router.post("/analyze/job")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def analyze_job(
     request: Request,
     payload: JobAnalyzeRequest,
@@ -181,22 +183,31 @@ async def analyze_job(
 # GET /analyses/{id} moved to analyses router for consolidation.
 
 @router.post("/analyze/message")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def analyze_message_endpoint(
+    request: Request,
     payload: AnalyzeMessageRequest,
     user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
     messages = [m.model_dump() for m in payload.messages]
     return analyze_messages(messages)
 
 @router.post("/analyze/offer-letter")
+@limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def analyze_offer_letter_endpoint(
+    request: Request,
     user: Annotated[User, Depends(get_current_user)],
     file: UploadFile = File(...),  # noqa: B008
     consent: bool = Form(...),  # noqa: B008
     keep_file: bool = Form(False),  # noqa: B008
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
+    if not consent:
+        raise HTTPException(
+            status_code=400,
+            detail="Explicit consent is required before uploading an offer letter for analysis.",
+        )
     settings = get_settings()
     max_bytes = int(getattr(settings, "offer_max_upload_mb", 5) or 5) * 1024 * 1024
     ttl_seconds = int(getattr(settings, "offer_file_ttl_hours", 24) or 24) * 3600

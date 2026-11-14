@@ -44,6 +44,16 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         return response
 
 
+def _is_production_env() -> bool:
+    try:
+        from app.config import get_settings
+
+        env = (get_settings().app_env or "").strip().lower()
+        return env in {"production", "prod"}
+    except Exception:
+        return False
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -56,4 +66,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "Content-Security-Policy",
             "default-src 'self'; frame-ancestors 'none'; base-uri 'self'",
         )
+        # HSTS only for production HTTPS deployments; avoid forcing on local HTTP/dev.
+        # Reverse proxies may also set this header in production.
+        if _is_production_env():
+            xf_proto = (request.headers.get("x-forwarded-proto") or "").lower()
+            is_https = request.url.scheme == "https" or xf_proto == "https"
+            if is_https:
+                response.headers.setdefault(
+                    "Strict-Transport-Security", "max-age=31536000"
+                )
         return response

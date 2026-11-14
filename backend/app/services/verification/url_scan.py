@@ -121,22 +121,10 @@ async def scan_public_url(url: str) -> dict[str, Any]:
                 "manual_paste_fallback": MANUAL_PASTE_LIMITED,
                 "notice": NOTICE,
             }
-        # fetch full-ish html again? safe_fetch returns snippet; for extraction we need more.
-        # re-fetch within limits to get body text for parsing
-        import httpx
-
         target = res.final_url or url
-        validate_url(target)
-        headers = {"User-Agent": "VERITORA-SafeFetch/1.0"}
-        async with httpx.AsyncClient(
-            follow_redirects=False,
-            timeout=10.0,
-            headers=headers,
-        ) as client:
-            r2 = await client.get(target)
-            html = r2.text[: 2 * 1024 * 1024]
-        jsonld = _extract_jsonld_jobposting(html)
-        basic = _extract_basic_fields(html, target)
+        html = res.body_text or ""
+        jsonld = _extract_jsonld_jobposting(html) if html else {}
+        basic = _extract_basic_fields(html, target) if html else {}
         extracted = {**basic, **jsonld}
         # ensure description is plain-ish
         if extracted.get("description"):
