@@ -139,7 +139,7 @@ async def get_public_passport(db: AsyncSession, token: str) -> dict[str, Any] | 
     except Exception:
         obj = None
     if not obj:
-        # fallback scan for fake session limitations
+        # fallback scan for in-memory session limitations
         try:
             # access store-like behavior via all objects not available; best effort
             from sqlalchemy import select

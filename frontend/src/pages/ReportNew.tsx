@@ -8,7 +8,7 @@ const categories: { value: ReportCategory; label: string }[] = [
   { value: 'payment_request', label: 'Payment request' },
   { value: 'impersonation_concern', label: 'Impersonation concern' },
   { value: 'suspicious_link', label: 'Suspicious link' },
-  { value: 'fake_offer_concern', label: 'Fake offer concern' },
+  { value: 'fake_offer_concern', label: 'Potentially fraudulent offer concern' },
   { value: 'data_request', label: 'Sensitive data request' },
   { value: 'misleading_job_details', label: 'Misleading job details' },
   { value: 'other', label: 'Other' },

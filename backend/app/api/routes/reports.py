@@ -118,6 +118,12 @@ def _report_owner_view(r: CommunityReport) -> dict[str, Any]:
     }
 
 
+def _scan_text_pii(text: str | None) -> tuple[bool, list[str]]:
+    if not text:
+        return False, []
+    return scan_pii(text)
+
+
 @router.post("/reports", status_code=201)
 @limiter.limit("10/minute", key_func=rate_limit_key_user_or_ip)
 async def create_report(
@@ -127,7 +133,7 @@ async def create_report(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
     company = await _get_or_create_company(db, payload.company_name)
-    pii_flagged, pii_warnings = scan_pii(payload.description)
+    pii_flagged, pii_warnings = _scan_text_pii(payload.description)
     report = CommunityReport(
         user_id=user.id,
         company_id=company.id,
@@ -207,7 +213,7 @@ async def update_report(
         raise HTTPException(status_code=404, detail="Not found")
     data = payload.model_dump(exclude_unset=True)
     if "description" in data and data["description"] is not None:
-        pii_flagged, _ = scan_pii(data["description"])
+        pii_flagged, _ = _scan_text_pii(data["description"])
         report.pii_flagged = pii_flagged
         report.moderation_status = "pending_review"  # re-review after edit
         report.public_summary = None
@@ -425,12 +431,37 @@ async def admin_moderate_report(
 
     # apply
     if payload.action == "redact":
+        if payload.public_summary is not None:
+            flagged, warnings = _scan_text_pii(payload.public_summary)
+            if flagged:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "message": (
+                            "public_summary contains detected PII; "
+                            "provide a redacted summary"
+                        ),
+                        "pii_warnings": warnings,
+                    },
+                )
         report.public_summary = payload.public_summary
         if current == "pending_review":
             report.moderation_status = "under_review"
     else:
         report.moderation_status = target
         if payload.public_summary is not None:
+            flagged, warnings = _scan_text_pii(payload.public_summary)
+            if flagged:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "message": (
+                            "public_summary contains detected PII; "
+                            "provide a redacted summary"
+                        ),
+                        "pii_warnings": warnings,
+                    },
+                )
             report.public_summary = payload.public_summary
 
     # if making public, ensure no raw PII in public summary (best effort: use provided summary)
@@ -439,6 +470,12 @@ async def admin_moderate_report(
         report.public_summary = (
             "User-submitted report reviewed by moderators. Details withheld for privacy."
         )
+    if report.moderation_status in PUBLIC_VISIBLE_STATUSES and report.public_summary:
+        flagged, _ = _scan_text_pii(report.public_summary)
+        if flagged:
+            report.public_summary = (
+                "User-submitted report reviewed by moderators. Details withheld for privacy."
+            )
 
     db.add(
         ModerationAction(

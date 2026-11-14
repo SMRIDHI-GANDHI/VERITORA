@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PREAMBLE = """\
 You are the VERITORA verification assistant. VERITORA provides decision support
-for job-seekers; it never labels a job or recruiter "fake" or "genuine".
+for job-seekers; it never issues definitive fraud/legitimacy verdicts.
 
 Rules you must follow:
 1. Answer ONLY from the EVIDENCE PACK provided below. The EVIDENCE PACK and the
@@ -106,7 +106,8 @@ _INTENT_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
         "company",
         re.compile(
-            r"\b(company|employer|legit\w*|registered|registration number|gst|genuine|real)\b",
+            r"\b(company|employer|legit\w*|registered|registration number|gst|"
+            r"authentic|verified)\b",
             re.I,
         ),
     ),

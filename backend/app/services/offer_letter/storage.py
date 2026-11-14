@@ -21,16 +21,29 @@ def get_storage_dir() -> Path:
     base = Path(os.getenv("OFFER_STORAGE_DIR") or "backend/storage/offer_letters")
     if not base.is_absolute():
         # resolve relative to cwd
-        base = Path.cwd() / base
+        base = (Path.cwd() / base).resolve()
+    else:
+        base = base.resolve()
     base.mkdir(parents=True, exist_ok=True)
     return base
+
+
+def _is_under_storage_dir(path: Path, storage: Path) -> bool:
+    try:
+        rp = path.resolve()
+        sp = storage.resolve()
+        return rp == sp or sp in rp.parents
+    except Exception:
+        return False
 
 
 def save_upload(data: bytes, *, suffix: str, ttl_seconds: int = 24 * 3600) -> StoredFile:
     storage = get_storage_dir()
     key = secrets.token_hex(16)
     safe_suffix = suffix if suffix in {".pdf", ".png", ".jpg", ".jpeg"} else ".bin"
-    path = storage / f"{key}{safe_suffix}"
+    path = (storage / f"{key}{safe_suffix}").resolve()
+    if not _is_under_storage_dir(path, storage):
+        raise ValueError("Invalid storage path")
     # write bytes
     with open(path, "wb") as f:
         f.write(data)
@@ -44,10 +57,15 @@ def save_upload(data: bytes, *, suffix: str, ttl_seconds: int = 24 * 3600) -> St
     )
 
 
-def delete_file(path: Path) -> None:
+def delete_file(path: Path | str) -> None:
     try:
-        if path.exists():
-            path.unlink()
+        p = Path(path)
+        storage = get_storage_dir()
+        # only delete files inside the intended storage directory
+        if not _is_under_storage_dir(p, storage):
+            return
+        if p.exists() and p.is_file():
+            p.unlink()
     except Exception:
         # best-effort; never crash on cleanup
         pass
@@ -59,9 +77,11 @@ def cleanup_expired(ttl_seconds: int = 24 * 3600) -> int:
     removed = 0
     try:
         for p in storage.iterdir():
-            if not p.is_file():
-                continue
             try:
+                if not p.is_file():
+                    continue
+                if not _is_under_storage_dir(p, storage):
+                    continue
                 age = now - p.stat().st_mtime
                 if age > ttl_seconds:
                     p.unlink()

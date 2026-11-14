@@ -137,6 +137,11 @@ async def test_passport_create_get_revoke_and_expiry(app_and_client, store):
         assert d.status_code == 204
         g2 = await ac.get(f"/api/v1/passports/{pub_token}")
         assert g2.status_code == 404
+        # revoked record retained in storage (no automatic cleanup implemented)
+        assert any(
+            str(p.id) == pid and p.revoked_at is not None
+            for p in store["trust_passports"].values()
+        )
 
         # expired returns 404
         analysis2 = JobAnalysis(
@@ -162,12 +167,15 @@ async def test_passport_create_get_revoke_and_expiry(app_and_client, store):
         )
         assert r3.status_code == 201
         tok2 = r3.json()["token"]
+        pid2 = r3.json()["id"]
         # force expire in store
         for p in store["trust_passports"].values():
             if hashlib.sha256(tok2.encode("utf-8")).hexdigest() == p.public_token_hash:
                 p.expires_at = datetime.now(UTC) - timedelta(days=1)
         g3 = await ac.get(f"/api/v1/passports/{tok2}")
         assert g3.status_code == 404
+        # expired record retained (no automatic purge implemented)
+        assert any(str(p.id) == pid2 for p in store["trust_passports"].values())
 
         # other user cannot revoke someone else's passport (not found/forbidden via 404)
         # create another

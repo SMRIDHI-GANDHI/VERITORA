@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
-from app.core.rate_limit import limiter
+from app.core.rate_limit import limiter, rate_limit_key_user_or_ip
 from app.db.models.job_analysis import JobAnalysis
 from app.db.models.user import User
 from app.db.session import get_db
@@ -27,7 +27,7 @@ MAX_MESSAGE_CHARS = 4000
 
 
 @router.post("/chat/sessions", status_code=201)
-@limiter.limit("20/minute")
+@limiter.limit("20/minute", key_func=rate_limit_key_user_or_ip)
 async def create_chat_session(
     request: Request,
     payload: dict[str, Any],
@@ -64,7 +64,7 @@ async def create_chat_session(
 
 
 @router.get("/chat/sessions")
-@limiter.limit("60/minute")
+@limiter.limit("60/minute", key_func=rate_limit_key_user_or_ip)
 async def list_chat_sessions(
     request: Request,
     user: Annotated[User, Depends(get_current_user)],
@@ -85,7 +85,7 @@ async def list_chat_sessions(
 
 
 @router.get("/chat/sessions/{session_id}")
-@limiter.limit("60/minute")
+@limiter.limit("60/minute", key_func=rate_limit_key_user_or_ip)
 async def get_chat_session(
     request: Request,
     session_id: str,
@@ -110,7 +110,7 @@ async def get_chat_session(
 
 
 @router.post("/chat/sessions/{session_id}/messages")
-@limiter.limit("30/minute")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def post_chat_message(
     request: Request,
     session_id: str,

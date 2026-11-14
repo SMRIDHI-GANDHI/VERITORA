@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter, rate_limit_key_user_or_ip
 from app.db.models.job_analysis import JobAnalysis
 from app.db.models.user import User
 from app.db.session import get_db
@@ -28,15 +29,19 @@ router = APIRouter(prefix="/api/v1", tags=["passports"])
 
 
 @router.get("/passports")
+@limiter.limit("60/minute", key_func=rate_limit_key_user_or_ip)
 async def list_passports_endpoint(
+    request: Request,
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
+    _ = request
     items = await list_user_passports(db, user_id=user.id)
     return {"items": items, "next_cursor": None}
 
 
 @router.post("/passports", status_code=201)
+@limiter.limit("20/minute", key_func=rate_limit_key_user_or_ip)
 async def create_passport_endpoint(
     request: Request,
     payload: dict[str, Any],
@@ -85,10 +90,13 @@ async def create_passport_endpoint(
 
 
 @router.get("/passports/{token}")
+@limiter.limit("60/minute")
 async def get_passport_public(
+    request: Request,
     token: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
+    _ = request
     snap = await get_public_passport(db, token)
     if not snap:
         raise HTTPException(status_code=404, detail="Passport not found, expired, or revoked")
@@ -96,6 +104,7 @@ async def get_passport_public(
 
 
 @router.delete("/passports/{passport_id}", status_code=204)
+@limiter.limit("20/minute", key_func=rate_limit_key_user_or_ip)
 async def delete_passport(
     request: Request,
     passport_id: str,
@@ -122,11 +131,13 @@ async def delete_passport(
 
 
 @router.post("/explanations/translate")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def translate_explanation(
+    request: Request,
     payload: dict[str, Any],
     user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
     language = str(payload.get("language") or "en")
     recommendations = payload.get("recommendations") or []
     factors = payload.get("risk_factors") or payload.get("factors") or []
@@ -144,11 +155,13 @@ async def translate_explanation(
 
 
 @router.post("/explanations/wording")
+@limiter.limit("30/minute", key_func=rate_limit_key_user_or_ip)
 async def explain_wording_endpoint(
+    request: Request,
     payload: dict[str, Any],
     user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
-    _ = user
+    _ = request, user
     text = str(payload.get("text") or "")
     if not text.strip():
         raise HTTPException(status_code=422, detail="text is required")

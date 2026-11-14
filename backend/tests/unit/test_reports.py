@@ -85,6 +85,36 @@ async def test_report_create_pending_pii_and_public_visibility(app_and_client, s
         assert "private_note" not in blob and "internal note" not in blob
         assert "description" not in pub
 
+        # moderator cannot publish a public summary containing PII
+        # (create another report to test moderation-time PII guard)
+        r2 = await ac.post(
+            "/api/v1/reports",
+            headers=_auth(token),
+            json={
+                "company_name": "Beta",
+                "category": "other",
+                "description": "This is a sufficiently long description without contact details.",
+            },
+        )
+        assert r2.status_code == 201
+        rid2 = r2.json()["id"]
+        bad = await ac.patch(
+            f"/api/v1/admin/reports/{rid2}",
+            headers=_auth(mod_token),
+            json={
+                "action": "approve",
+                "reason": "Reviewed",
+                "public_summary": "Contact me at leak@example.com or 9876543210.",
+            },
+        )
+        assert bad.status_code == 400
+        detail = bad.json().get("detail") or {}
+        if isinstance(detail, dict):
+            assert detail.get("pii_warnings")
+        # report must not become publicly visible with PII summary
+        lst3 = await ac.get("/api/v1/reports", headers=_auth(token))
+        assert all(i["id"] != rid2 for i in lst3.json().get("items", []))
+
         # moderation/audit records written
         assert len(store["moderation_actions"]) >= 1
         assert any(a.action == "approve" for a in store["moderation_actions"].values())
