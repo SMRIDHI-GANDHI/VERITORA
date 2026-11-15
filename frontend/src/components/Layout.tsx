@@ -217,7 +217,7 @@ export function Layout() {
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
           aria-expanded={menuOpen}
-          aria-controls="rail-drawer"
+          aria-controls={menuOpen ? 'rail-drawer' : undefined}
           className="flex items-center gap-2 border border-paper/45 px-3 py-1.5 text-[13px] font-semibold"
         >
           <Icon name={menuOpen ? 'close' : 'menu'} size={16} />
