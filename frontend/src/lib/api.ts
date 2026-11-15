@@ -7,7 +7,8 @@ export type ApiError = {
   request_id?: string
 }
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1'
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined
+const BASE_URL = (rawBaseUrl && rawBaseUrl.replace(/\/$/, '')) || '/api/v1'
 
 let accessToken: string | null = null
 export function setAccessToken(token: string | null) {

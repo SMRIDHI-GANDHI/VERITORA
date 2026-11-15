@@ -113,17 +113,14 @@ export function TrustScan() {
         }
       } else if (file) {
         try {
-          const fd = new FormData()
-          fd.append('file', file)
-          fd.append('screenshot', file)
-          const res = await fetch(`${(import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1'}/analyze/offer-letter`, {
-            method: 'POST', body: fd, credentials: 'include'
+          const data = await apiFetch<Record<string, unknown>>('/analyze/offer-letter', {
+            method: 'POST',
+            body: fd,
           })
-          if (res.ok) {
-            const data = await res.json() as Record<string, unknown>
-            next = { job_description: String(data?.extracted_text || data?.description || ''), job_title: String(data?.job_title || ''), company_name: String(data?.company_name || '') }
-          } else {
-            next = {}
+          next = {
+            job_description: String(data?.extracted_text || data?.description || ''),
+            job_title: String(data?.job_title || ''),
+            company_name: String(data?.company_name || ''),
           }
         } catch {
           next = {}

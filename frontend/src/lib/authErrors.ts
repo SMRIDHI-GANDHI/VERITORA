@@ -1,7 +1,7 @@
 import { HttpError } from './api'
 
 const NETWORK_MESSAGE =
-  'Cannot reach the server. Check that the backend is running on http://localhost:8000 and try again.'
+  'Cannot reach the server. Check your connection and that the service is available, then try again.'
 
 /** Treat anything that looks like an HTTP error as one, even across bundles. */
 function asHttpError(err: unknown): HttpError | null {
