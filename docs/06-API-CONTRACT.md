@@ -6,7 +6,7 @@ Base: `/api/v1`. JSON, `snake_case`, UTC ISO-8601, UUIDs. Auth: `Authorization: 
 ```
 Rate-limit rejections use the same shape with `status:429`, `code:"RATE_LIMITED"` and a `Retry-After` header (seconds). `/auth/register` is limited to 10/minute per client; `/auth/login` and `/auth/refresh` to 5/minute. A duplicate registration returns `400` with `detail` explaining that the account exists and suggesting sign-in; login stays generic (`401 Invalid credentials`) so it does not reveal whether an account exists.
 
-Pagination: `?limit=20&cursor=<opaque>` → `{items:[...], next_cursor:null|string}`.
+Pagination: many list endpoints use `?limit=20&cursor=<opaque>` → `{items:[...], next_cursor:null|string}`. Endpoint-specific schemas below document any different cursor semantics.
 
 ## Endpoints
 | Method | Path | Auth | Purpose |
@@ -48,7 +48,7 @@ Pagination: `?limit=20&cursor=<opaque>` → `{items:[...], next_cursor:null|stri
 | GET | /admin/reports; PATCH /admin/reports/{id} | moderator | Queue / update status |
 | GET/PATCH | /admin/watchlist, /admin/watchlist/{id} | moderator | Watchlist mgmt |
 | GET | /admin/network/alerts | moderator | Graph alerts |
-| GET | /admin/audit-logs, /admin/metrics | admin | Audit, model feedback |
+| GET | /admin/audit-logs, /admin/metrics | admin | Audit log review (redacted metadata) and operational metrics; see schemas below |
 | POST | /feedback/analysis/{id} | user | Mark false positive / helpful |
 | GET | /resources/cybercrime | anon | Official resources |
 
@@ -177,6 +177,55 @@ Returns the immutable snapshot plus `{"passport_id":"uuid","expires_at":"...","c
 **TrustPassportRevoke** (`DELETE /passports/{id}`, owner)
 204 No Content on success (idempotent in effect for an already-revoked owned passport); 404 if not found/not owned.
 
+**AdminAuditLogs** (`GET /admin/audit-logs`, admin)
+- **Authorization:** admin only (`require_role("admin")`). Unauthorized/unauthenticated requests return problem JSON per global auth/error handling.
+- **Query parameters (current implementation):**
+  - `limit` (int, optional, default `50`): FastAPI validation `ge=1`, `le=200`.
+  - `cursor` (string|null, optional, default `null`): offset token for the current implementation (not keyset pagination; not cryptographically opaque; not guaranteed stable across data changes).
+  - `action` (string|null, optional): exact-match filter on audit `action`.
+  - `resource_type` (string|null, optional): exact-match filter on audit `resource_type`.
+- **Ordering:** `AuditLog.timestamp DESC, AuditLog.id DESC` (applied before filtering pagination slice in the current implementation).
+- **Pagination behavior (exact):** rows are loaded for the requested filters, then `start` is derived from `cursor`: if `cursor` is provided, `start = max(int(cursor), 0)`; if `cursor` cannot be parsed as an integer, `start = 0`. `page = rows[start : start + limit]`. `next_cursor = str(start + limit)` when more rows remain after the page, otherwise `null`. Because this is offset-based over the fetched result set, inserts/deletes or changing filters can shift page boundaries.
+- **Response (200):**
+```json
+{
+  "items": [
+    {
+      "id": "string",
+      "actor_id": "string|null",
+      "action": "string|null",
+      "resource_type": "string|null",
+      "resource_id": "string|null",
+      "timestamp": "string|null",
+      "request_id": "string|null"
+    }
+  ],
+  "next_cursor": "string|null"
+}
+```
+- **Field/nullability/timestamp details:** `id` is returned as a string. `actor_id` is the actor UUID serialized as a string when present, else `null`. `action`, `resource_type`, `resource_id`, and `request_id` are returned as stored values or `null` when absent. `timestamp` is `datetime.isoformat()` (UTC-aware per storage/model) when present, else `null`.
+- **Privacy/redaction:** response includes redacted, non-PII event metadata only. It does **not** expose `ip_hash`, raw IP addresses, request/response bodies, headers, secrets, tokens, credentials, or PII fields.
+- **Best-effort read-failure behavior:** if audit log query/loading fails, the handler returns `{"items":[],"next_cursor":null}` and does not leak internal details. **An empty result therefore does not always mean there are no audit events** (it may indicate no matches, cursor past end, or a read/query failure).
+
+**AdminMetrics** (`GET /admin/metrics`, admin)
+- **Authorization:** admin only (`require_role("admin")`). Unauthorized/unauthenticated requests return problem JSON per global auth/error handling.
+- **Request:** no query parameters.
+- **Response (200, current implementation):**
+```json
+{
+  "analyses": 0,
+  "reports": 0,
+  "reports_by_status": {"pending_review": 0},
+  "users_by_role": {"user": 0, "moderator": 0, "admin": 0},
+  "watchlist_entries": 0,
+  "audit_events": 0,
+  "generated_at": "2026-11-15T00:00:00+00:00"
+}
+```
+- **Field details:** `analyses` (int) count of job analyses; `reports` (int) count of community reports; `reports_by_status` (object/map string→int) counts by `moderation_status` (unknown/missing status bucketed as `"unknown"`); `users_by_role` (object/map string→int) counts by user role (missing role bucketed as `"unknown"`); `watchlist_entries` (int) count of watchlist entries; `audit_events` (int) count of audit log events (`COUNT(*)` with fallback to counting IDs if count query fails); `generated_at` (string|null) UTC ISO-8601 timestamp set when metrics generation runs (`datetime.now(UTC).isoformat()`), otherwise `null`.
+- **Best-effort behavior:** metric collection is best-effort; failures during collection/commit are handled without leaking internal details (rollback attempted on exception) and the endpoint returns the current metrics object (defaults/partial values possible depending on where a failure occurs).
+- **Audited access:** a successful metrics access path records an audit event with action `admin.metrics.view`, `resource_type` `admin_metrics`, actor = requesting admin, and request/IP-hash context via the audit logger (audit record stored server-side; not included in the metrics response). The response contains aggregate operational counts only and must not expose secrets, credentials, tokens, PII, or other sensitive internal details.
+
 ## Health
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
@@ -198,4 +247,4 @@ Returns the immutable snapshot plus `{"passport_id":"uuid","expires_at":"...","c
 Copy rules: 1930 + portal are the primary routes; CERT-In is an incident-response body, not a replacement for a police/cybercrime complaint; VeriTrust is not the official portal and does not file complaints. Re-verify against official sources before each release.
 
 ## Contract rules
-Endpoints that expose reports return only moderator-approved, redacted fields. 403 vs 404: use 404 for resources the caller may not know exist. Never echo raw submitted text containing flagged PII in public responses. OpenAPI is auto-generated; `docs/openapi.json` exported in CI and diffed for drift.
+Endpoints that expose reports return only moderator-approved, redacted fields. 403 vs 404: use 404 for resources the caller may not know exist. Never echo raw submitted text containing flagged PII in public responses. FastAPI serves runtime OpenAPI at `/openapi.json`, but no exported `docs/openapi.json` artifact or CI OpenAPI export/drift-check workflow is currently maintained in this repository.

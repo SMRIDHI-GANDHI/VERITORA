@@ -234,9 +234,25 @@
       "missingReport": "Linked report details are unavailable."
     },
     "audit": {
-      "unavailable": "Audit log viewing endpoint is not available in this build. Moderation actions are recorded server-side."
+      "title": "Audit log review",
+      "subtitle": "Administrator-only review of recorded actions. Sensitive details and IPs are not shown.",
+      "unavailable": "Audit log review is not available in this build.",
+      "forbidden": "Audit log access is restricted to administrators.",
+      "loadError": "Unable to load audit logs.",
+      "empty": "No audit events found for the selected filters.",
+      "actionFilter": "Action",
+      "resourceFilter": "Resource type",
+      "applyFilters": "Apply",
+      "timestamp": "Timestamp",
+      "action": "Action",
+      "resource": "Resource",
+      "actor": "Actor ID",
+      "requestId": "Request ID",
+      "firstPage": "First page",
+      "nextPage": "Next page"
     },
     "ratings": {
+      "title": "Rating review",
       "unavailable": "Rating review/duplicate-spam clustering endpoints are not available in this build."
     }
   },

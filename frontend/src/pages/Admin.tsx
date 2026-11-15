@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   adminListAppeals,
+  adminListAuditLogs,
   adminListReports,
   adminModerateReport,
   HttpError,
   type AdminAppeal,
+  type AdminAuditLogItem,
   type AdminReport,
   type ModerationActionType,
 } from '../lib/api'
@@ -14,6 +16,7 @@ import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { Masthead } from '../components/ui/Masthead'
 import { Stamp } from '../components/ui/Stamp'
+import { useAuth } from '../auth/useAuth'
 
 const transitions: Record<string, Set<string>> = {
   pending_review: new Set(['under_review', 'evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed', 'redact']),
@@ -43,6 +46,7 @@ function canDo(status: string, action: ModerationActionType) {
 
 export function Admin() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [tab, setTab] = useState<'reports' | 'ratings' | 'appeals' | 'audit'>('reports')
   const [statusFilter, setStatusFilter] = useState('')
   const [items, setItems] = useState<AdminReport[]>([])
@@ -61,6 +65,14 @@ export function Admin() {
   const [appealsLoading, setAppealsLoading] = useState(false)
   const [appealsError, setAppealsError] = useState<string | null>(null)
   const [appealSelectedId, setAppealSelectedId] = useState<string | null>(null)
+
+  const [auditItems, setAuditItems] = useState<AdminAuditLogItem[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [auditError, setAuditError] = useState<string | null>(null)
+  const [auditActionFilter, setAuditActionFilter] = useState('')
+  const [auditResourceFilter, setAuditResourceFilter] = useState('')
+  const [auditCursor, setAuditCursor] = useState<string | null>(null)
+  const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -88,9 +100,35 @@ export function Admin() {
     }
   }
 
+  async function loadAudit(cursor: string | null = null) {
+    if (user?.role !== 'admin') return
+    setAuditLoading(true)
+    setAuditError(null)
+    try {
+      const res = await adminListAuditLogs({
+        limit: 50,
+        cursor,
+        action: auditActionFilter.trim() || undefined,
+        resource_type: auditResourceFilter.trim() || undefined,
+      })
+      setAuditItems(res.items || [])
+      setAuditCursor(cursor)
+      setAuditNextCursor(res.next_cursor ?? null)
+    } catch (err) {
+      if (err instanceof HttpError && (err.status === 401 || err.status === 403)) {
+        setAuditError(t('admin.audit.forbidden', { defaultValue: 'Audit log access is restricted to administrators.' }))
+      } else {
+        setAuditError(t('admin.audit.loadError', { defaultValue: 'Unable to load audit logs.' }))
+      }
+    } finally {
+      setAuditLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (tab === 'reports') void load()
     if (tab === 'appeals') void loadAppeals()
+    if (tab === 'audit') void loadAudit(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, statusFilter])
 
@@ -147,9 +185,9 @@ export function Admin() {
       />
 
       <div className="flex flex-wrap gap-px border-b border-heading">
-        {(['reports', 'ratings', 'appeals', 'audit'] as const).map((t) => (
-          <button key={t} type="button" onClick={() => setTab(t)} aria-pressed={tab === t} className={`-mb-px border-b-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${tab === t ? 'border-stamp bg-tint/60 text-heading' : 'border-transparent text-muted hover:text-heading'}`}>
-            {t === 'reports' ? 'Reports queue' : t === 'ratings' ? 'Rating review' : t === 'appeals' ? 'Appeals' : 'Audit log'}
+        {(['reports', 'ratings', 'appeals', 'audit'] as const).map((tname) => (
+          <button key={tname} type="button" onClick={() => setTab(tname)} aria-pressed={tab === tname} className={`-mb-px border-b-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${tab === tname ? 'border-stamp bg-tint/60 text-heading' : 'border-transparent text-muted hover:text-heading'}`}>
+            {tname === 'reports' ? 'Reports queue' : tname === 'ratings' ? 'Rating review' : tname === 'appeals' ? 'Appeals' : 'Audit log'}
           </button>
         ))}
       </div>
@@ -212,13 +250,85 @@ export function Admin() {
             )}
           </section>
         </div>
-      ) : tab !== 'reports' ? (
+      ) : tab === 'audit' ? (
+        <section className="border border-border p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-display text-[17px] font-bold text-heading">{t('admin.audit.title', { defaultValue: 'Audit log review' })}</h2>
+              <p className="mt-1 text-sm text-muted">{t('admin.audit.subtitle', { defaultValue: 'Administrator-only review of recorded actions. Sensitive details and IPs are not shown.' })}</p>
+            </div>
+            {user?.role === 'admin' && (
+              <button type="button" onClick={() => void loadAudit(auditCursor)} className="border border-heading px-3 py-1.5 text-sm font-semibold text-heading transition-colors hover:bg-tint/40">{t('common.retry', { defaultValue: 'Refresh' })}</button>
+            )}
+          </div>
+
+          {user?.role !== 'admin' ? (
+            <p className="text-sm text-muted">{t('admin.audit.forbidden', { defaultValue: 'Audit log access is restricted to administrators.' })}</p>
+          ) : (
+            <>
+              <div className="mb-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                <div>
+                  <label htmlFor="audit-action" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">{t('admin.audit.actionFilter', { defaultValue: 'Action' })}</label>
+                  <input id="audit-action" value={auditActionFilter} onChange={(e) => setAuditActionFilter(e.target.value)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" placeholder="e.g. moderation.approve" />
+                </div>
+                <div>
+                  <label htmlFor="audit-resource" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">{t('admin.audit.resourceFilter', { defaultValue: 'Resource type' })}</label>
+                  <input id="audit-resource" value={auditResourceFilter} onChange={(e) => setAuditResourceFilter(e.target.value)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" placeholder="e.g. community_report" />
+                </div>
+                <div className="flex items-end">
+                  <button type="button" onClick={() => void loadAudit(null)} className="w-full border border-heading bg-action px-4 py-2 font-semibold text-buttonText transition-colors hover:bg-accent2 sm:w-auto">{t('admin.audit.applyFilters', { defaultValue: 'Apply' })}</button>
+                </div>
+              </div>
+
+              {auditLoading ? (
+                <div className="space-y-2" aria-busy="true"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
+              ) : auditError ? (
+                <ErrorState message={auditError} onRetry={() => void loadAudit(auditCursor)} />
+              ) : auditItems.length === 0 ? (
+                <p className="text-sm text-muted">{t('admin.audit.empty', { defaultValue: 'No audit events found for the selected filters.' })}</p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-left text-muted">
+                          <th scope="col" className="py-2 pr-3 font-medium">{t('admin.audit.timestamp', { defaultValue: 'Timestamp' })}</th>
+                          <th scope="col" className="py-2 pr-3 font-medium">{t('admin.audit.action', { defaultValue: 'Action' })}</th>
+                          <th scope="col" className="py-2 pr-3 font-medium">{t('admin.audit.resource', { defaultValue: 'Resource' })}</th>
+                          <th scope="col" className="py-2 pr-3 font-medium">{t('admin.audit.actor', { defaultValue: 'Actor ID' })}</th>
+                          <th scope="col" className="py-2 pr-3 font-medium">{t('admin.audit.requestId', { defaultValue: 'Request ID' })}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditItems.map((item) => (
+                          <tr key={item.id} className="border-b border-border/60 align-top">
+                            <td className="py-2 pr-3 whitespace-nowrap">{item.timestamp || '—'}</td>
+                            <td className="py-2 pr-3 font-mono text-xs">{item.action || '—'}</td>
+                            <td className="py-2 pr-3">
+                              <div className="font-mono text-xs">{item.resource_type || '—'}</div>
+                              <div className="text-xs text-muted break-all">{item.resource_id || '—'}</div>
+                            </td>
+                            <td className="py-2 pr-3 font-mono text-xs break-all">{item.actor_id || '—'}</td>
+                            <td className="py-2 pr-3 font-mono text-xs break-all">{item.request_id || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button type="button" onClick={() => void loadAudit(null)} disabled={auditCursor === null || auditLoading} className="border border-heading px-3 py-1.5 text-sm font-semibold text-heading transition-colors hover:bg-tint/40 disabled:opacity-50">{t('admin.audit.firstPage', { defaultValue: 'First page' })}</button>
+                    <button type="button" onClick={() => void loadAudit(auditNextCursor)} disabled={!auditNextCursor || auditLoading} className="border border-heading px-3 py-1.5 text-sm font-semibold text-heading transition-colors hover:bg-tint/40 disabled:opacity-50">{t('admin.audit.nextPage', { defaultValue: 'Next page' })}</button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </section>
+      ) : tab === 'ratings' ? (
         <section className="border border-border p-5">
-          <h2 className="font-display text-[17px] font-bold text-heading capitalize">{tab}</h2>
+          <h2 className="font-display text-[17px] font-bold text-heading">{t('admin.ratings.title', { defaultValue: 'Rating review' })}</h2>
           <p className="mt-2 text-sm text-muted">
-            {tab === 'audit'
-              ? t('admin.audit.unavailable', { defaultValue: 'Audit log viewing endpoint is not available in this build. Moderation actions are recorded server-side.' })
-              : t('admin.ratings.unavailable', { defaultValue: 'Rating review/duplicate-spam clustering endpoints are not available in this build.' })}
+            {t('admin.ratings.unavailable', { defaultValue: 'Rating review/duplicate-spam clustering endpoints are not available in this build.' })}
           </p>
         </section>
       ) : (
@@ -230,7 +340,7 @@ export function Admin() {
             </div>
             <div className="mb-3">
               <label htmlFor="status-filter" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Filter by status</label>
-              <select id="status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
+              <select id="status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
                 <option value="">All</option>
                 {['pending_review', 'under_review', 'evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed'].map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -282,7 +392,7 @@ export function Admin() {
                   <h3 className="font-medium text-heading">Moderation action</h3>
                   <div>
                     <label htmlFor="action" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Action</label>
-                    <select id="action" value={action} onChange={(e) => setAction(e.target.value as ModerationActionType)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
+                    <select id="action" value={action} onChange={(e) => setAction(e.target.value as ModerationActionType)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
                       {(['approve', 'reject', 'mark_inconclusive', 'request_evidence', 'remove', 'redact'] as ModerationActionType[]).map((a) => (
                         <option key={a} value={a} disabled={!canDo(selected.moderation_status, a)}>
                           {a}{!canDo(selected.moderation_status, a) ? ' (invalid transition)' : ''}
@@ -293,15 +403,15 @@ export function Admin() {
                   </div>
                   <div>
                     <label htmlFor="reason" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Reason (required)</label>
-                    <textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} />
+                    <textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} />
                   </div>
                   <div>
                     <label htmlFor="pubsum" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Public summary (redacted, neutral)</label>
-                    <textarea id="pubsum" value={publicSummary} onChange={(e) => setPublicSummary(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} placeholder="Required for public visibility; use neutral, redacted wording." />
+                    <textarea id="pubsum" value={publicSummary} onChange={(e) => setPublicSummary(e.target.value)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} placeholder="Required for public visibility; use neutral, redacted wording." />
                   </div>
                   <div>
                     <label htmlFor="pnote" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Private note (moderators only)</label>
-                    <textarea id="pnote" value={privateNote} onChange={(e) => setPrivateNote(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={2} />
+                    <textarea id="pnote" value={privateNote} onChange={(e) => setPrivateNote(e.target.value)} className="w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={2} />
                     <p className="mt-1 text-xs text-muted">Private notes are not shown to non-moderators.</p>
                   </div>
                   {action === 'remove' && (
@@ -312,7 +422,7 @@ export function Admin() {
                   )}
                   {actionError && <div role="alert" className="border-l-2 border-danger bg-danger/10 px-3 py-2 text-sm text-danger">{actionError}</div>}
                   <button type="button" onClick={submitAction} disabled={saving || !canDo(selected.moderation_status, action)} className="border border-heading bg-action px-4 py-2 font-semibold text-buttonText transition-colors hover:bg-accent2 disabled:opacity-50">
-                    {saving ? 'Applying…' : 'Apply action'}
+                    {saving ? 'Applying...' : 'Apply action'}
                   </button>
                 </div>
               </div>

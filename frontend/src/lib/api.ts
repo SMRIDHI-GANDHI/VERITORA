@@ -463,6 +463,26 @@ export function adminListAppeals() {
   return apiFetch<{ items: AdminAppeal[]; next_cursor: string | null }>('/admin/appeals')
 }
 
+export type AdminAuditLogItem = {
+  id: string
+  actor_id?: string | null
+  action?: string | null
+  resource_type?: string | null
+  resource_id?: string | null
+  timestamp?: string | null
+  request_id?: string | null
+}
+
+export function adminListAuditLogs(params?: { limit?: number; cursor?: string | null; action?: string; resource_type?: string }) {
+  const sp = new URLSearchParams()
+  if (params?.limit) sp.set('limit', String(params.limit))
+  if (params?.cursor) sp.set('cursor', params.cursor)
+  if (params?.action) sp.set('action', params.action)
+  if (params?.resource_type) sp.set('resource_type', params.resource_type)
+  const q = sp.toString()
+  return apiFetch<{ items: AdminAuditLogItem[]; next_cursor: string | null }>(`/admin/audit-logs${q ? `?${q}` : ''}`)
+}
+
 export type TrendPoint = { week_start: string; count: number }
 
 export type RisingCategory = {

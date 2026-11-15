@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -7,6 +8,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+logger = logging.getLogger(__name__)
 
 
 class DomainError(Exception):
@@ -93,6 +96,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def unhandled_handler(request: Request, exc: Exception) -> JSONResponse:
         rid = getattr(request.state, "request_id", None)
+        logger.exception(
+            "unhandled exception",
+            extra={"request_id": rid, "method": request.method, "path": request.url.path},
+        )
         return JSONResponse(
             status_code=500,
             content=problem(
