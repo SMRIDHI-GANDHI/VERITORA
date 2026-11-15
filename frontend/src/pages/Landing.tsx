@@ -126,12 +126,12 @@ export function Landing() {
         <div className="rule-double-quiet mt-3" aria-hidden="true" />
         <dl className="mt-1">
           {OUTPUTS.map((item) => (
-            <div key={item.titleKey} className="entry flex gap-4 py-5">
-              <Icon name={item.icon} size={20} className="mt-1 text-stamp" />
-              <div className="min-w-0">
-                <dt className="font-display text-[17px] font-bold text-heading">{t(item.titleKey)}</dt>
-                <dd className="mt-1.5 max-w-[70ch] text-[15px] leading-relaxed text-muted">{t(item.bodyKey)}</dd>
-              </div>
+            <div key={item.titleKey} className="entry py-5">
+              <dt className="flex gap-4 font-display text-[17px] font-bold text-heading">
+                <Icon name={item.icon} size={20} className="mt-1 shrink-0 text-stamp" aria-hidden="true" />
+                <span className="min-w-0">{t(item.titleKey)}</span>
+              </dt>
+              <dd className="mt-1.5 max-w-[70ch] pl-9 text-[15px] leading-relaxed text-muted">{t(item.bodyKey)}</dd>
             </div>
           ))}
         </dl>

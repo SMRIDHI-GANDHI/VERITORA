@@ -13,8 +13,8 @@ const labels: Record<Band, string> = {
 const meta: Record<Band, { icon: IconName; className: string }> = {
   lower: { icon: 'checked', className: 'border-success/60 bg-success/10 text-success' },
   moderate: { icon: 'warning', className: 'border-warning/60 bg-warning/10 text-warning' },
-  high_concern: { icon: 'warning', className: 'border-stamp/60 bg-stamp/10 text-stamp' },
-  very_high_concern: { icon: 'warning', className: 'border-stamp bg-stamp/15 text-stamp' },
+  high_concern: { icon: 'warning', className: 'border-stamp/60 bg-stamp/10 text-heading' },
+  very_high_concern: { icon: 'warning', className: 'border-stamp bg-stamp/15 text-heading' },
   insufficient_information: { icon: 'inconclusive', className: 'border-ash/50 bg-ash/10 text-ash' },
 }
 

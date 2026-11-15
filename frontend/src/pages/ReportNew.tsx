@@ -85,7 +85,7 @@ export function ReportNew() {
         </p>
         <div className="border border-border bg-tint/30 p-4 text-sm">
           <div className="space-y-1.5 font-mono text-[13px]">
-            <p><span className="font-bold uppercase tracking-[0.1em] text-muted">Report ID: </span>{result.id}</p>
+            <p>Report ID: {result.id}</p>
             <div><span className="font-bold uppercase tracking-[0.1em] text-muted">Moderation status · </span>{result.moderation_status}</div>
             {result.pii_warnings?.length ? (
               <div><span className="font-bold uppercase tracking-[0.1em] text-muted">PII warnings · </span>{result.pii_warnings.join(', ')}</div>
