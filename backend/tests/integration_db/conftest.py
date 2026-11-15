@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import os
 from collections.abc import AsyncGenerator
@@ -17,21 +17,32 @@ def _is_postgres_url(url: str) -> bool:
     return url.startswith("postgresql")
 
 
+def _require_postgres_database_url() -> bool:
+    return os.getenv("CI", "").lower() in {"1", "true", "yes"} or os.getenv(
+        "REQUIRE_POSTGRES_INTEGRATION", ""
+    ).lower() in {"1", "true", "yes"}
+
+
 @pytest.fixture(scope="session")
 def database_url() -> str:
     """Real database URL for integration tests.
 
     Uses DATABASE_URL from the environment. In CI this points to an ephemeral
-    PostgreSQL service container. Tests are skipped when a PostgreSQL URL is not
-    configured to avoid touching any real/dev/prod database.
+    PostgreSQL service container. Locally, tests are skipped when a PostgreSQL
+    URL is not configured to avoid touching any real/dev/prod database. In CI or
+    when REQUIRE_POSTGRES_INTEGRATION is set, a non-PostgreSQL/missing URL fails
+    fast to prevent all-skip false passes.
     """
     url = os.getenv("DATABASE_URL", "")
-    if not _is_postgres_url(url):
-        pytest.skip(
-            "PostgreSQL-backed integration tests require DATABASE_URL="
-            "postgresql+asyncpg://... (CI provides an isolated service DB)."
-        )
-    return url
+    if _is_postgres_url(url):
+        return url
+    message = (
+        "PostgreSQL-backed integration tests require DATABASE_URL="
+        "postgresql+asyncpg://... (CI provides an isolated service DB)."
+    )
+    if _require_postgres_database_url():
+        pytest.fail(message)
+    pytest.skip(message)
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -30,13 +30,21 @@ Pagination: `?limit=20&cursor=<opaque>` → `{items:[...], next_cursor:null|stri
 | GET | /analyses, /analyses/{id} | owner | History, detail |
 | POST | /analyses/{id}/refresh | owner | Re-run checks, creates new analysis linked via supersedes_id |
 | GET | /dashboard | user | Dashboard aggregates |
-| POST | /data-exposure/check | user | Classify requested fields |
-| POST | /passports | owner | Create Trust Passport |
-| GET | /passports/{token} | anon | View passport (if not expired/revoked) |
-| DELETE | /passports/{id} | owner | Revoke |
+| POST | /data-exposure/check | user | Classify requested fields (items/text) |
+| GET | /saved | user | List saved opportunities |
+| POST | /saved | user | Save opportunity (analysis_id/title/notes) |
+| GET | /checklist | user | List checklist progress items |
+| POST | /checklist | user | Upsert checklist item progress (item_key/completed/meta) |
+| GET | /passports | owner | List my Trust Passports |
+| POST | /passports | owner | Create Trust Passport snapshot link |
+| GET | /passports/{token} | anon | View public passport snapshot (404 if not found/expired/revoked) |
+| DELETE | /passports/{id} | owner | Revoke passport (204) |
 | POST | /explanations/translate | user | Translate fixed recommendation/factor explanations (original preserved) |
 | POST | /explanations/wording | user | Rule-based plain-language explanation of formal/manipulative clauses |
-| POST | /chat/sessions; POST /chat/sessions/{id}/messages | user | (P2) Chatbot |
+| POST | /chat/sessions | user | Create chat session (optional analysis_id/title) |
+| GET | /chat/sessions | user | List my chat sessions |
+| GET | /chat/sessions/{id} | owner | Get chat session with messages |
+| POST | /chat/sessions/{id}/messages | user | Send message and receive grounded assistant reply |
 | GET | /admin/reports; PATCH /admin/reports/{id} | moderator | Queue / update status |
 | GET/PATCH | /admin/watchlist, /admin/watchlist/{id} | moderator | Watchlist mgmt |
 | GET | /admin/network/alerts | moderator | Graph alerts |
@@ -155,6 +163,19 @@ Response:
  "rising_categories":[{"category":"payment_request","previous_count":1,"current_count":4,"delta":3}]}
 ```
 Only moderator-approved reports are counted; the current incomplete week is excluded from the weekly series.
+
+**TrustPassportCreate** (`POST /passports`, owner)
+Request: `{"analysis_id":"uuid","expires_in_days":30}` (`expires_in_days` optional, clamped 1..365, default 30). `analysis_id` must belong to the caller (404 otherwise).
+Response (201): `{"id":"uuid","analysis_id":"uuid","token":"<returned once>","expires_at":"...","created_at":"...","note":"Store this token securely. It will not be shown again."}`. The server stores only a SHA-256 hash of the token; the raw token is never persisted.
+
+**MyPassportListItem** (`GET /passports`, owner)
+Response: `{"items":[{"id":"uuid","analysis_id":"uuid","created_at":"...","expires_at":"...","revoked_at":"...|null","status":"active|expired|revoked","risk_band":"...|null","risk_score":number|null,"summary":"...|null","rules_version":"...|null"}],"next_cursor":null}`. Items are derived from the immutable snapshot created at issuance.
+
+**TrustPassportPublic** (`GET /passports/{token}`, anon)
+Returns the immutable snapshot plus `{"passport_id":"uuid","expires_at":"...","created_at":"...","revoked":false}`. Returns 404 if the token is unknown, expired, or revoked. Snapshot fields include `assessment_type`, `rules_version`, `risk_score`, `risk_band`, `summary`, `risk_factors`, `checks`/`checks_performed_and_not_performed` (expected checks marked `not_checked` when not performed), `unknowns`, `missing_information`, `recommendations`, `community` (approved-report summary only), `disclaimer_key`, `analysis_created_at`, `refresh_guidance`, and `no_personal_data:true`. No personal data is included.
+
+**TrustPassportRevoke** (`DELETE /passports/{id}`, owner)
+204 No Content on success (idempotent in effect for an already-revoked owned passport); 404 if not found/not owned.
 
 ## Health
 | Method | Path | Auth | Purpose |
