@@ -51,3 +51,61 @@ If time is short, stop after Phase 1 plus a thin slice of B09 (hash identifiers 
 
 ## Definition of done (every task)
 Acceptance criteria met; tests added and green; lint/typecheck clean; contract and docs updated; `.env.example` updated; no TODOs hiding missing behavior; standard report delivered.
+
+---
+
+## Phase E–G closure record (release-readiness evidence snapshot)
+
+This section records the final Phase G closure state as of commit `749de22` / `origin/main` (2026-11-15). It is an evidence-based status record, not a claim of production readiness. Unexecuted checks remain **NOT VERIFIED**.
+
+### Phase E — Security hardening and regression coverage
+- **Status:** Complete (evidence-supported by delivered commits and automated gates).
+- **Key commit:** `f16b67e` — `test(security): complete Phase E hardening and regression coverage`.
+- **Scope delivered (summary):** SSRF hardening (DNS/public-IP validation, redirect revalidation/pinning behavior per implementation), HSTS in production/prod HTTPS contexts, placeholder/empty secret and runtime-config validation, CSRF defense-in-depth for cookie-auth flows, offer-letter consent/validation and related report/PII/rate-limiting hardening, verdict-language cleanup (`fake/genuine/scam_confirmed` prohibited), dependency alignment (`pydantic[email]>=2.9.0`) as previously recorded.
+
+### Phase F — CI, PostgreSQL integration scaffolding, contract/ADRs, env templates/runbook
+- **Status:** Complete (implementation/configuration and local automated gates evidence-supported). Remote CI execution for the closure commit was **NOT VERIFIED** in this session (no `gh`/GitHub Actions access available).
+- **Key commits:** `12c5998` (`ci: add Playwright e2e and PostgreSQL-backed integration jobs`), `7146b96` (`docs: complete Phase F API contract and ADR updates`, ADRs `0005`–`0007`), `4109118` (`docs: complete Phase F environment templates and runbook`).
+- **CI workflow (`.github/workflows/ci.yml`) jobs/configured:** `backend` (lint/typecheck/tests + `pytest -q --ignore=tests/integration_db`), `backend-integration-db` (PostgreSQL 16 service, `alembic upgrade head`, `pytest -q tests/integration_db` with JUnit enforcement: exactly 3 executed tests, zero failures/errors/skips), `frontend` (lint/typecheck/test/build), `frontend-e2e` (PostgreSQL 16, migrate+seed, Playwright Chromium install, `npm run test:e2e` with line+HTML reporter and artifact upload on failure).
+
+### Phase G — Release readiness (Tasks 1–5)
+
+| Task | Status | Evidence / notes |
+|---|---|---|
+| Part 1, Task 1 — Production configuration review (secrets/cookies/CORS/APP_ENV) | **Complete** | Commit `a57c151` (`hardening: complete Phase G Part 1 operational readiness`). Dev-like scoping for localhost CORS/CSRF conveniences, non-dev runtime config validation for `DATABASE_URL`/`SECRET_KEY`/`NETWORK_HMAC_KEY`, cookie/security behavior documented/implemented (`backend/app/config.py`, `backend/app/api/routes/auth.py`, `backend/app/main.py`, `backend/tests/unit/test_config.py`). |
+| Part 1, Task 2 — Backup/restore and migration rollback policy | **Complete (policy/documentation)**; execution **NOT VERIFIED** | Commit `a57c151` added `docs/13-OPERATIONS-RECOVERY.md` (and `docs/README.md` index). Documented PostgreSQL backup/restore/runbook, Alembic rollback/forward-fix policy, cautions and proposed-vs-evidenced status. No destructive backup/restore/PITR/Alembic downgrade executed on real or disposable production-like database in this closure session. |
+| Part 2, Task 3 — Observability, audit-log review, metrics, API docs | **Complete** | Commit `749de22` (`observability: complete Phase G Part 2 Tasks 3 and 4`). Structured request/error logging, enriched admin-only `/api/v1/admin/metrics` (audited `admin.metrics.view`) and redacted admin-only `/api/v1/admin/audit-logs` (limit/cursor/filters/order as implemented), focused tests, Admin UI/client/i18n updates, `docs/06-API-CONTRACT.md` aligned. |
+| Part 2, Task 4 — Accessibility review and documentation alignment | **Complete (automated/static + CI-configured checks documented)**; browser axe E2E runtime **NOT VERIFIED** locally/CI in-session | Commit `749de22`. Contrast/theme and component/page accessibility-related tests pass locally; Playwright/axe specs exist and are CI-configured (`frontend-e2e`), but no GitHub Actions run was verified in this session. |
+| Task 5 — Specification-conformance sweep and closure evidence | **Complete (sweep + local gates)** | No blocking code-level conformance failures identified against `docs/01`–`docs/11` DoD areas in implemented code/tests reviewed. Local gates passed (see below). Environment/operational gaps remain documented as NOT VERIFIED. |
+
+### Verification evidence (local, 2026-11-15, commit `749de22` working tree before this docs-only closure commit)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Git/remote baseline | **PASS** | `main` clean and synced: `HEAD == origin/main == 749de226d6d9110fcee73167c21282286cc675fc` (`git status -sb`, `git fetch origin`, rev-parse). |
+| Backend `python -m ruff check .` | **PASS** | `All checks passed!` |
+| Backend `python -m mypy app` | **PASS** | `Success: no issues found in 90 source files` |
+| Backend `python -m pytest -q` | **PASS** | `144 passed, 3 skipped, 28 warnings in 80.60s` (pre-existing: `slowapi` `asyncio.iscoroutinefunction` deprecation, `app/schemas/auth.py:15` Pydantic v2 class-config deprecation, `passlib` argon2 metadata warning). |
+| Frontend `npm run lint` | **PASS** | `eslint .` clean |
+| Frontend `npm run typecheck` | **PASS** | `tsc -b --pretty false` clean |
+| Frontend `npm test -- --run` | **PASS** | `18 files, 96 tests passed` (Vitest v2.1.9; React Router future-flag warnings only) |
+| Frontend `npm run build` | **PASS** | `vite v6.4.6` production build succeeded |
+| Verdict-language scan | **PASS** | No `\b(fake|genuine|scam_confirmed)\b` matches in `backend/`, `frontend/src/`, `docs/` |
+| i18n JSON validity/parity | **PASS** | `frontend/src/i18n/en.json` and `hi.json` parse OK; 230/230 keys, 0 missing each side |
+| Alembic migration history/heads | **PASS (consistency check)** | Linear history `0001`→`0009_chat_sessions` (head); downgrade functions present in inspected migration files. `alembic current` against local configured DB reported head (informational; not a restore/downgrade drill). |
+| GitHub Actions (all required jobs) for `origin/main`/closure commit | **NOT VERIFIED** | `gh` CLI and GitHub Actions API access unavailable in-session; no workflow run IDs/logs could be retrieved. CI configuration was inspected but execution/result must not be assumed. |
+| PostgreSQL-backed integration job (`backend-integration-db`) actual CI execution | **NOT VERIFIED** | Workflow/config present and enforces expected integration tests/skips; no verified CI run evidence in-session. Local pytest suite passed but this does not substitute for verified CI job execution evidence. |
+| Playwright + axe browser E2E (`frontend-e2e`) actual CI execution | **NOT VERIFIED** | Specs/config present and CI job configured (public/authenticated, light/dark journeys/a11y as implemented); no local browser E2E run and no verified CI run evidence in-session. |
+| Real OCR/PDF/image extraction success paths | **NOT VERIFIED** | Local environment missing optional deps/tools: `PyMuPDF/fitz`, `Pillow/PIL`, `pytesseract`, and `tesseract` executable not found. Behavior should remain classified as degraded/inconclusive when unavailable. |
+| Backup/restore, PITR, Alembic downgrade execution drill | **NOT VERIFIED** | `docs/13-OPERATIONS-RECOVERY.md` provides policy/runbook; no destructive or production-like restore/downgrade drill executed (no safe isolated disposable DB exercise performed in-session). |
+| Committed `docs/openapi.json` artifact | **NOT APPLICABLE** | Repository does not maintain a committed OpenAPI JSON snapshot by design/current state; FastAPI serves runtime `/openapi.json`. `docs/06-API-CONTRACT.md` is the maintained contract reference. |
+
+### Known limitations (non-exhaustive, honest)
+- **CI evidence gap:** Required GitHub Actions job outcomes for the relevant commits/final closure commit were not verifiable in this environment; green status must not be assumed.
+- **OCR capability:** Real PDF/image OCR success paths not verified locally due to missing optional dependencies/tools.
+- **Operational recovery execution:** Backup/restore/PITR and Alembic downgrade/forward-fix outcomes are documented but not executed/validated in an isolated drill during this closure.
+- **OpenAPI artifact:** No committed `docs/openapi.json`; runtime spec only.
+- **Warnings (pre-existing, non-blocking):** `slowapi` coroutine deprecation warning, Pydantic v2 class-based config deprecation in `app/schemas/auth.py:15`, `passlib` argon2 metadata warning, and frontend React Router v7 future-flag/test-environment warnings.
+
+### Release-readiness note
+Automated local quality gates passed and no blocking code-level conformance defects were identified in this closure pass; however, **important CI/operational/environment checks remain unverified** (notably remote GitHub Actions execution for required jobs, browser axe E2E runtime evidence, PostgreSQL integration CI evidence, OCR success paths, and restore/downgrade drills). This does **not** constitute production readiness without the required operational and CI evidence.
