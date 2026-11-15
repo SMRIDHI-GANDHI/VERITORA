@@ -8,6 +8,12 @@ import {
   type ChatStatementType,
 } from '../lib/api'
 import { ErrorState } from '../components/ui/ErrorState'
+import { Masthead } from '../components/ui/Masthead'
+import { Stamp } from '../components/ui/Stamp'
+import { Button } from '../components/ui/Button'
+import { buttonClass } from '../components/ui/buttonStyles'
+import { fieldClass, fieldLabelClass } from '../components/ui/Field'
+import { Icon } from '../components/ui/Icon'
 
 const SENSITIVE_RE = /\b(password|passwd|otp|one[- ]?time|cvv|pin|banking credential)\b/i
 
@@ -148,46 +154,41 @@ export function Chat() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Verification chatbot</h1>
-        <p className="mt-2 text-muted">
-          Answers are grounded in your stored analysis and approved sources. Every answer labels its
-          statements and cites the evidence behind them.
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl space-y-7">
+      <Masthead
+        title="Verification chatbot"
+        subtitle="Answers are grounded in your stored analysis and approved sources. Every answer labels its statements and cites the evidence behind them."
+        aside={<Stamp lines={['Session', sessionId ? sessionId.slice(0, 8).toUpperCase() : 'starting']} tone="ink" />}
+      />
 
-      <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm">
-        Never share passwords, OTPs, banking credentials, or remote-access codes. VERITORA is not an
-        official reporting portal.
-      </div>
+      <p className="flex items-start gap-3 border-l-2 border-warning bg-warning/10 px-4 py-3 text-sm leading-relaxed text-text">
+        <Icon name="warning" size={16} className="mt-0.5 shrink-0 text-warning" />
+        <span>Never share passwords, OTPs, banking credentials, or remote-access codes. VERITORA is not an official reporting portal.</span>
+      </p>
 
       {sensitive && (
-        <div
-          role="alert"
-          className="rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-danger"
-        >
+        <div role="alert" className="border-l-2 border-danger bg-danger/10 px-4 py-3 text-sm leading-relaxed text-danger">
           Warning: your message may contain sensitive credential information (password/OTP/PIN/banking).
           Do not share it here or with recruiters. It will not be stored.
         </div>
       )}
 
       {notice && (
-        <div role="status" className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm">
+        <div role="status" className="border-l-2 border-warning bg-warning/10 px-4 py-3 text-sm text-text">
           {notice}
         </div>
       )}
 
       {error && <ErrorState message={error} onRetry={load} />}
 
-      <section className="rounded-xl border border-border bg-surface p-4">
+      <section className="space-y-5">
         <h2 className="sr-only">Messages</h2>
 
-        <div className="space-y-3" aria-live="polite" aria-busy={sending}>
+        <div className="space-y-4" aria-live="polite" aria-busy={sending}>
           {loading ? (
-            <p className="text-sm text-muted">Starting a session…</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">Starting a session…</p>
           ) : messages.length === 0 ? (
-            <p className="text-sm text-muted">
+            <p className="max-w-[62ch] text-sm leading-relaxed text-muted">
               Ask a question about a job posting, a recruiter or how to report a scam. For example:
               “Should I pay a registration fee?”
             </p>
@@ -195,35 +196,35 @@ export function Chat() {
             messages.map((m) => (
               <article
                 key={m.id}
-                className={`rounded-lg border p-3 ${
-                  m.role === 'user' ? 'border-border bg-surface2/20' : 'border-caramel/30 bg-caramel/5'
+                className={`border-l-2 px-4 py-3 ${
+                  m.role === 'user' ? 'border-border bg-tint/40' : 'border-stamp bg-stamp/[0.05]'
                 }`}
               >
-                <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-semibold uppercase tracking-wide text-muted">{m.role}</span>
+                <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{m.role}</span>
                   {m.statementTypes.map((t) => (
                     <span
                       key={t}
                       title={STATEMENT_HINTS[t]}
-                      className="rounded border border-border px-2 py-0.5"
+                      className="border border-border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-heading"
                     >
                       {STATEMENT_LABELS[t]}
                     </span>
                   ))}
                   {m.mode === 'templated' && (
-                    <span className="rounded bg-surface px-2 py-0.5 text-muted">
+                    <span className="border border-border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-muted">
                       Rule-based answer
                     </span>
                   )}
                 </div>
-                <p className="whitespace-pre-wrap text-sm">{m.text}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{m.text}</p>
 
                 {m.citations.length > 0 && (
-                  <div className="mt-2 text-xs text-muted">
-                    <strong>Evidence:</strong>{' '}
-                    <ul className="mt-1 flex flex-wrap gap-1">
+                  <div className="mt-2.5 text-xs text-muted">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em]">Evidence</span>
+                    <ul className="mt-1.5 flex flex-wrap gap-1.5">
                       {m.citations.map((c) => (
-                        <li key={c} className="rounded bg-surface px-2 py-0.5">
+                        <li key={c} className="bg-tint px-2 py-0.5 font-mono text-[11px]">
                           {citationLabel(c)}
                         </li>
                       ))}
@@ -236,8 +237,8 @@ export function Chat() {
           <div ref={bottomRef} />
         </div>
 
-        <div className="mt-4 space-y-2">
-          <label htmlFor="chat-input" className="block text-sm font-medium text-heading">
+        <div className="space-y-2.5 border-t border-border pt-4">
+          <label htmlFor="chat-input" className={fieldLabelClass}>
             Ask about verification
           </label>
           <textarea
@@ -250,42 +251,29 @@ export function Chat() {
                 void send()
               }
             }}
-            className="w-full rounded-lg border border-border bg-surface p-2.5"
+            className={fieldClass}
             rows={4}
             placeholder="e.g. Should I pay a registration fee?"
             aria-describedby="chat-help"
           />
-          <p id="chat-help" className="text-xs text-muted">
-            Press Ctrl+Enter to send. Answers are decision support, not a verdict — verify
-            independently before you act.
+          <p id="chat-help" className="text-xs leading-relaxed text-muted">
+            Press Ctrl+Enter to send. Answers are decision support, not a verdict — verify independently before you act.
           </p>
-          <div className="flex flex-wrap gap-2">
-            <button
+          <div className="flex flex-wrap gap-2.5">
+            <Button
               type="button"
               onClick={() => void send()}
               disabled={sending || !sessionId || !input.trim()}
-              className="rounded-lg bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-50"
             >
               {sending ? 'Thinking…' : 'Send'}
-            </button>
-            <button
-              type="button"
-              onClick={() => void load()}
-              disabled={sending}
-              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
+            </Button>
+            <Button variant="secondary" type="button" onClick={() => void load()} disabled={sending}>
               New session
-            </button>
-            <Link
-              to="/help/cybercrime"
-              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium"
-            >
+            </Button>
+            <Link to="/help/cybercrime" className={buttonClass('secondary')}>
               Official cyber resources
             </Link>
-            <Link
-              to="/analyze"
-              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium"
-            >
+            <Link to="/analyze" className={buttonClass('secondary')}>
               Run a check
             </Link>
           </div>

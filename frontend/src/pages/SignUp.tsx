@@ -1,9 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/useAuth'
 import { signUpErrorMessage } from '../lib/authErrors'
+import { AuthFrame } from '../components/AuthFrame'
+import { Icon } from '../components/ui/Icon'
+import { buttonClass } from '../components/ui/buttonStyles'
+import { fieldClass, fieldLabelClass, fieldHintClass } from '../components/ui/Field'
 
 export function SignUp() {
+  const { t } = useTranslation()
   const { register } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -16,9 +22,18 @@ export function SignUp() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!name || !email || !password) { setError('Please fill in all required fields.'); return }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
-    if (password !== confirm) { setError('Passwords do not match.'); return }
+    if (!name || !email || !password) {
+      setError('Please fill in all required fields.')
+      return
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
     setSubmitting(true)
     try {
       await register(name, email, password)
@@ -31,31 +46,80 @@ export function SignUp() {
   }
 
   return (
-    <section className="mx-auto max-w-md">
-      <h1 className="mb-4 text-2xl font-bold">Sign Up</h1>
-      <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-border bg-surface p-6" noValidate>
-        {error && <div role="alert" className="rounded border border-danger/30 bg-danger/10 p-2 text-sm text-danger">{error}</div>}
-        <div>
-          <label htmlFor="name" className="mb-1 block text-sm font-medium">Name</label>
-          <input id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded border border-border bg-bg px-3 py-2" required />
-        </div>
-        <div>
-          <label htmlFor="su-email" className="mb-1 block text-sm font-medium">Email</label>
-          <input id="su-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded border border-border bg-bg px-3 py-2" required />
-        </div>
-        <div>
-          <label htmlFor="su-password" className="mb-1 block text-sm font-medium">Password</label>
-          <input id="su-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded border border-border bg-bg px-3 py-2" required />
-        </div>
-        <div>
-          <label htmlFor="su-confirm" className="mb-1 block text-sm font-medium">Confirm password</label>
-          <input id="su-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full rounded border border-border bg-bg px-3 py-2" required />
-        </div>
-        <button type="submit" disabled={submitting} className="w-full rounded bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-60">
-          {submitting ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
-      <p className="mt-4 text-sm text-muted">Already have an account? <Link to="/signin" className="text-accent underline">Sign in</Link></p>
+    <section className="mx-auto max-w-[1060px]">
+      <AuthFrame>
+        <h1 className="font-display text-[26px] leading-tight text-heading">{t('nav.signup')}</h1>
+        <div className="rule-double mt-3" aria-hidden="true" />
+        <form onSubmit={onSubmit} className="mt-6 space-y-5" noValidate>
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 border-2 border-danger bg-danger/10 px-4 py-3 text-sm font-semibold leading-snug text-danger"
+            >
+              <Icon name="warning" size={16} className="mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+          <div>
+            <label htmlFor="name" className={fieldLabelClass}>
+              Name
+            </label>
+            <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} required />
+          </div>
+          <div>
+            <label htmlFor="su-email" className={fieldLabelClass}>
+              Email
+            </label>
+            <input
+              id="su-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClass}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="su-password" className={fieldLabelClass}>
+              Password
+            </label>
+            <input
+              id="su-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={fieldClass}
+              required
+            />
+            <p className={fieldHintClass}>{t('auth.passwordHint')}</p>
+          </div>
+          <div>
+            <label htmlFor="su-confirm" className={fieldLabelClass}>
+              Confirm password
+            </label>
+            <input
+              id="su-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className={fieldClass}
+              required
+            />
+          </div>
+          <button type="submit" disabled={submitting} className={buttonClass('primary', 'lg', 'w-full')}>
+            {submitting ? 'Creating account...' : 'Create account'}
+          </button>
+        </form>
+        <p className="mt-6 border-t border-dotted border-border pt-4 text-sm text-muted">
+          Already have an account?{' '}
+          <Link to="/signin" className="font-semibold text-accent underline underline-offset-4">
+            {t('nav.signin')}
+          </Link>
+        </p>
+      </AuthFrame>
     </section>
   )
 }

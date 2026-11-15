@@ -3,6 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { apiFetch } from '../lib/api'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Masthead } from '../components/ui/Masthead'
+import { Section } from '../components/ui/Section'
+import { Stamp } from '../components/ui/Stamp'
+import { Button } from '../components/ui/Button'
+import { fieldClass, fieldLabelClass } from '../components/ui/Field'
+import { Icon } from '../components/ui/Icon'
 
 type InputMethod = 'text' | 'url' | 'screenshot'
 type RiskCategory = 'Lower concern' | 'Moderate concern' | 'High concern' | 'Insufficient information'
@@ -26,20 +32,25 @@ const emptyExtracted: Extracted = {
 }
 
 function RiskBadge({ category }: { category: RiskCategory }) {
-  const cls = category === 'Lower concern' ? 'bg-success/15 text-success border-success/30'
-    : category === 'Moderate concern' ? 'bg-warning/15 text-warning border-warning/30'
-    : category === 'High concern' ? 'bg-danger/15 text-danger border-danger/30'
-    : 'bg-mocha/10 text-mocha border-mocha/30'
-  return <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${cls}`}>{category}</span>
+  const tone = category === 'Lower concern' ? 'border-green text-green'
+    : category === 'Moderate concern' ? 'border-warning text-warning'
+    : category === 'High concern' ? 'border-stamp text-stamp'
+    : 'border-border text-muted'
+  const mark = category === 'Lower concern' ? 'checked'
+    : category === 'Moderate concern' ? 'warning'
+    : category === 'High concern' ? 'warning'
+    : 'not-checked'
+  return (
+    <span className={`inline-flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-[12px] font-bold uppercase tracking-[0.1em] ${tone}`}>
+      <Icon name={mark as 'checked' | 'warning' | 'not-checked'} size={14} />
+      {category}
+    </span>
+  )
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
-      <h2 className="mb-3 text-lg font-semibold text-heading">{title}</h2>
-      {children}
-    </section>
-  )
+/** A ruled passage of the scan file: serif heading, hairline, then the rows. */
+function Block({ title, children }: { title: string; children: React.ReactNode }) {
+  return <Section title={title}>{children}</Section>
 }
 
 export function TrustScan() {
@@ -246,56 +257,57 @@ export function TrustScan() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-border bg-surface2/40 p-8">
-        <h1 className="text-4xl font-semibold text-heading">{t('trustscan.title')}</h1>
-        <p className="mt-2 text-xl text-mocha">{t('trustscan.subtitle')}</p>
-        <p className="mt-3 max-w-3xl text-text">{t('trustscan.description')}</p>
-      </section>
+      <Masthead
+        title={t('trustscan.title')}
+        subtitle={t('trustscan.subtitle')}
+        aside={<Stamp lines={['Trust scan', 'multi-check']} tone="ink" />}
+      />
+      <p className="max-w-3xl text-[15px] leading-relaxed text-text">{t('trustscan.description')}</p>
 
-      <SectionCard title="Input method">
-        <div className="mb-4 flex flex-wrap gap-2">
+      <Block title="Input method">
+        <div className="mb-4 flex flex-wrap gap-px border-b border-heading">
           {([
             ['text', 'Paste Job Description'],
             ['url', 'Enter Job URL'],
             ['screenshot', 'Upload Screenshot'],
           ] as [InputMethod, string][]).map(([k, label]) => (
-            <button key={k} type="button" onClick={() => setMethod(k)} className={`rounded-lg border px-4 py-2 text-sm font-medium ${method === k ? 'border-caramel bg-caramel/15 text-heading' : 'border-border bg-surface text-text hover:bg-latte/40'}`}>
+            <button key={k} type="button" onClick={() => setMethod(k)} aria-pressed={method === k} className={`-mb-px border-b-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${method === k ? 'border-stamp bg-tint/60 text-heading' : 'border-transparent text-muted hover:text-heading'}`}>
               {label}
             </button>
           ))}
         </div>
         {method === 'text' && (
           <div>
-            <label htmlFor="ts-text" className="mb-1 block text-sm font-medium text-heading">Job description</label>
-            <textarea id="ts-text" value={text} onChange={(e) => setText(e.target.value)} rows={10} className="w-full rounded-lg border border-border bg-surface p-3" placeholder="Paste the complete job description here..." />
+            <label htmlFor="ts-text" className={fieldLabelClass}>Job description</label>
+            <textarea id="ts-text" value={text} onChange={(e) => setText(e.target.value)} rows={10} className={fieldClass} placeholder="Paste the complete job description here..." />
           </div>
         )}
         {method === 'url' && (
           <div>
-            <label htmlFor="ts-url" className="mb-1 block text-sm font-medium text-heading">Job URL</label>
-            <input id="ts-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-3" placeholder="https://..." />
+            <label htmlFor="ts-url" className={fieldLabelClass}>Job URL</label>
+            <input id="ts-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} className={fieldClass} placeholder="https://..." />
             <p className="mt-1 text-xs text-muted">Only public http(s) URLs are processed using existing backend safeguards.</p>
           </div>
         )}
         {method === 'screenshot' && (
           <div className="space-y-3">
-            <label htmlFor="ts-file" className="block text-sm font-medium text-heading">Upload screenshot</label>
-            <div className="rounded-lg border-2 border-dashed border-border bg-surface p-6 text-center">
+            <label htmlFor="ts-file" className={fieldLabelClass}>Upload screenshot</label>
+            <div className="border border-dashed border-border bg-tint/30 p-6 text-center">
               <input id="ts-file" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => onFile(e.target.files?.[0] || null)} className="mx-auto block text-sm" />
               <p className="mt-2 text-xs text-muted">PNG, JPG, or WEBP. Max 10 MB.</p>
             </div>
-            {preview && <img src={preview} alt="Uploaded screenshot preview" className="max-h-64 rounded-lg border border-border" />}
+            {preview && <img src={preview} alt="Uploaded screenshot preview" className="max-h-64 border border-border" />}
           </div>
         )}
         {processError && <p role="alert" className="mt-3 text-sm text-danger">{processError}</p>}
         <div className="mt-4">
-          <button type="button" onClick={processInput} disabled={!canProcess || processing} className="rounded-lg bg-caramel px-5 py-2 font-semibold text-buttonText disabled:opacity-50">
+          <Button type="button" onClick={processInput} disabled={!canProcess || processing} size="lg">
             {processing ? 'Processing...' : 'Process input'}
-          </button>
+          </Button>
         </div>
-      </SectionCard>
+      </Block>
 
-      <SectionCard title="Extracted job information (review and edit)">
+      <Block title="Extracted job information (review and edit)">
         <p className="mb-4 text-sm text-muted">Review and correct extracted information before running verification. Missing information is not invented.</p>
         <div className="grid gap-4 md:grid-cols-2">
           {([
@@ -308,71 +320,71 @@ export function TrustScan() {
             ['application_link', 'Application link'],
           ] as [keyof Extracted, string][]).map(([key, label]) => (
             <div key={key}>
-              <label htmlFor={`ex-${key}`} className="mb-1 block text-sm font-medium text-heading">{label}</label>
-              <input id={`ex-${key}`} value={extracted[key]} onChange={(e) => setExtracted({ ...extracted, [key]: e.target.value })} className="w-full rounded-lg border border-border bg-surface p-2.5" />
+              <label htmlFor={`ex-${key}`} className={fieldLabelClass}>{label}</label>
+              <input id={`ex-${key}`} value={extracted[key]} onChange={(e) => setExtracted({ ...extracted, [key]: e.target.value })} className={fieldClass} />
             </div>
           ))}
           <div className="md:col-span-2">
-            <label htmlFor="ex-desc" className="mb-1 block text-sm font-medium text-heading">Job description</label>
-            <textarea id="ex-desc" rows={6} value={extracted.job_description} onChange={(e) => setExtracted({ ...extracted, job_description: e.target.value })} className="w-full rounded-lg border border-border bg-surface p-2.5" />
+            <label htmlFor="ex-desc" className={fieldLabelClass}>Job description</label>
+            <textarea id="ex-desc" rows={6} value={extracted.job_description} onChange={(e) => setExtracted({ ...extracted, job_description: e.target.value })} className={fieldClass} />
           </div>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={runVerification} disabled={analyzing} className="rounded-lg bg-espresso px-5 py-2 font-semibold text-cream disabled:opacity-50">
+          <Button type="button" onClick={runVerification} disabled={analyzing} size="lg">
             {analyzing ? 'Running verification...' : 'Run TrustScan verification'}
-          </button>
+          </Button>
         </div>
-      </SectionCard>
+      </Block>
 
       {analyzing && <Skeleton className="h-40 w-full" />}
       {analyzeError && <ErrorState message={analyzeError} onRetry={runVerification} />}
 
       {overall && modules && (
         <div className="space-y-6">
-          <SectionCard title="Overall assessment">
+          <Block title="Overall assessment">
             <div className="flex flex-wrap items-center gap-4">
               <RiskBadge category={overall.category} />
               <p className="text-sm text-muted">Risk score: {overall.score ?? 'Not enough information'}</p>
             </div>
             <p className="mt-3 text-sm">{overall.explanation}</p>
             <p className="mt-2 text-xs text-muted">AI-generated risk assessments are decision support and are distinct from independently verified facts. Absence of detected warning signs does not confirm legitimacy.</p>
-          </SectionCard>
+          </Block>
 
           <div className="grid gap-4 md:grid-cols-2">
             {modules.map((m) => (
-              <SectionCard key={m.name} title={m.name}>
+              <Block key={m.name} title={m.name}>
                 <p className="mb-3 text-sm text-muted">{m.summary}</p>
                 <ul className="space-y-2">
                   {m.findings.map((f, i) => (
-                    <li key={i} className="rounded-lg border border-border bg-surface2/30 p-3 text-sm">
+                    <li key={i} className="entry pb-3 text-sm">
                       <p className="font-medium text-heading">{f.title}</p>
                       <p className="text-text">{f.detail}</p>
                       {f.evidence && <p className="mt-1 break-all text-xs text-muted">Evidence: {f.evidence}</p>}
                     </li>
                   ))}
                 </ul>
-              </SectionCard>
+              </Block>
             ))}
           </div>
 
-          <SectionCard title="Recommended next steps">
+          <Block title="Recommended next steps">
             <ul className="list-disc space-y-1 pl-5 text-sm">
               <li>Independently verify the company through its official website and contact channels.</li>
               <li>Do not pay fees or share sensitive information (passwords, OTPs, banking details) to obtain a job.</li>
               <li>Treat unavailable information as unknown, not as proof of safety or fraud.</li>
               <li>Use official cybercrime reporting channels if you suspect fraud or financial loss.</li>
             </ul>
-          </SectionCard>
+          </Block>
 
-          <SectionCard title="Actions">
+          <Block title="Actions">
             <div className="flex flex-wrap gap-3">
-              <button type="button" className="rounded-lg border border-border bg-surface px-4 py-2 text-sm" onClick={() => alert('Save analysis: connect to backend when available.')}>Save analysis</button>
-              <button type="button" className="rounded-lg border border-border bg-surface px-4 py-2 text-sm" onClick={() => window.print()}>Download report</button>
-              <button type="button" className="rounded-lg border border-border bg-surface px-4 py-2 text-sm" onClick={() => { window.location.href = '/reports/new' }}>Submit community report</button>
-              <button type="button" className="rounded-lg bg-caramel px-4 py-2 text-sm font-semibold text-buttonText" onClick={() => { window.location.href = '/dashboard' }}>Return to dashboard</button>
+              <Button variant="secondary" type="button" onClick={() => alert('Save analysis: connect to backend when available.')}>Save analysis</Button>
+              <Button variant="secondary" type="button" onClick={() => window.print()}>Download report</Button>
+              <Button variant="secondary" type="button" onClick={() => { window.location.href = '/reports/new' }}>Submit community report</Button>
+              <Button type="button" onClick={() => { window.location.href = '/dashboard' }}>Return to dashboard</Button>
             </div>
             <p className="mt-3 text-xs text-muted">Actions use existing routes/backend where available; unavailable operations are indicated clearly.</p>
-          </SectionCard>
+          </Block>
         </div>
       )}
     </div>

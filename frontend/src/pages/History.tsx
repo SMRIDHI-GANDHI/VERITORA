@@ -4,6 +4,11 @@ import { getAnalysis, listAnalyses, refreshAnalysis, type AnalysisResult } from 
 import { RiskBand } from '../components/ui/RiskBand'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Masthead } from '../components/ui/Masthead'
+import { Section } from '../components/ui/Section'
+import { Button } from '../components/ui/Button'
+import { buttonClass } from '../components/ui/buttonStyles'
+import { Stamp } from '../components/ui/Stamp'
 
 function shortDate(v?: string) {
   if (!v) return '—'
@@ -89,77 +94,105 @@ export function History() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Analysis history</h1>
-        <p className="mt-2 text-muted">Review past analyses and compare refreshed results with originals.</p>
-      </div>
+    <div className="mx-auto max-w-7xl space-y-8">
+      <Masthead
+        title="Analysis history"
+        subtitle="Review past analyses and compare refreshed results with originals."
+        aside={<Stamp lines={['Ledger', `${items.length} filed`]} tone="ink" />}
+      />
 
-      {loading ? <div className="space-y-2"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div> : error ? <ErrorState message={error} /> : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-          <section className="rounded-xl border border-border bg-surface p-4">
-            <h2 className="mb-3 text-lg font-semibold text-heading">History</h2>
-            {items.length === 0 ? <p className="text-sm text-muted">No analyses yet.</p> : (
-              <ul className="space-y-2">
+      {loading ? (
+        <div className="space-y-2"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+      ) : error ? (
+        <ErrorState message={error} />
+      ) : (
+        <div className="grid gap-x-9 gap-y-8 lg:grid-cols-[1fr_1.2fr]">
+          <Section title="History" meta={`${items.length} filed`}>
+            {items.length === 0 ? (
+              <p className="text-sm text-muted">No analyses yet.</p>
+            ) : (
+              <ul>
                 {items.map((a) => (
-                  <li key={a.id}>
-                    <button type="button" onClick={() => setSelected(a)} className={`w-full rounded-lg border p-3 text-left ${selected?.id === a.id ? 'border-caramel bg-caramel/10' : 'border-border'}`}>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono text-xs text-muted">{a.id.slice(0, 8)}…</span>
-                        <RiskBand band={a.risk_band} />
+                  <li key={a.id} className="border-b border-border/60">
+                    <button
+                      type="button"
+                      onClick={() => setSelected(a)}
+                      aria-pressed={selected?.id === a.id}
+                      className={`flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-2 py-3 text-left transition-colors ${
+                        selected?.id === a.id ? 'bg-tint/70 shadow-[inset_3px_0_0_0_var(--color-stamp)]' : 'hover:bg-tint/30'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <span className="font-mono text-xs font-bold tracking-[0.08em] text-heading">{a.id.slice(0, 8)}…</span>
+                        <div className="mt-0.5 font-mono text-[11px] text-muted">{shortDate(a.created_at)}</div>
+                        {a.supersedes_id && (
+                          <div className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+                            Refreshed (supersedes {String(a.supersedes_id).slice(0, 8)}…)
+                          </div>
+                        )}
                       </div>
-                      <div className="mt-1 text-sm text-muted">{shortDate(a.created_at)}</div>
-                      {a.supersedes_id && <div className="mt-1 text-xs text-muted">Refreshed (supersedes {String(a.supersedes_id).slice(0, 8)}…)</div>}
+                      <RiskBand band={a.risk_band} />
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-          </section>
+          </Section>
 
-          <section className="rounded-xl border border-border bg-surface p-4 space-y-4">
-            <h2 className="text-lg font-semibold text-heading">Detail & comparison</h2>
-            {!selected ? <p className="text-sm text-muted">Select an analysis to view details.</p> : (
-              <>
-                <div className="flex flex-wrap gap-2">
-                  <Link to={`/analysis/${selected.id}`} className="rounded-lg border border-border px-3 py-2 text-sm">Open full result</Link>
-                  <button type="button" onClick={() => onRefresh(selected.id)} disabled={busy} className="rounded-lg bg-caramel px-3 py-2 text-sm font-semibold text-buttonText disabled:opacity-50">{busy ? 'Refreshing…' : 'Refresh checks'}</button>
+          <Section title="Detail & comparison" meta={selected ? selected.id.slice(0, 8).toUpperCase() : 'none selected'}>
+            {!selected ? (
+              <p className="text-sm text-muted">Select an analysis to view details.</p>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex flex-wrap gap-2.5">
+                  <Link to={`/analysis/${selected.id}`} className={buttonClass('secondary')}>
+                    Open full result
+                  </Link>
+                  <Button onClick={() => onRefresh(selected.id)} disabled={busy}>
+                    {busy ? 'Refreshing…' : 'Refresh checks'}
+                  </Button>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-lg border border-border p-3 text-sm">
-                    <h3 className="font-medium text-heading">Selected</h3>
-                    <div><strong>ID:</strong> <span className="font-mono text-xs">{selected.id}</span></div>
-                    <div><strong>Created:</strong> {shortDate(selected.created_at)}</div>
-                    <div><strong>Band:</strong> {selected.risk_band}</div>
-                    <div><strong>Score:</strong> {selected.risk_score ?? '—'}</div>
-                    <div><strong>Rules:</strong> {selected.rules_version || '—'}</div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="border border-border p-3.5 text-sm">
+                    <h3 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Selected</h3>
+                    <div className="space-y-1 text-text">
+                      <div><strong className="font-display">ID:</strong> <span className="font-mono text-xs">{selected.id}</span></div>
+                      <div><strong className="font-display">Created:</strong> {shortDate(selected.created_at)}</div>
+                      <div><strong className="font-display">Band:</strong> {selected.risk_band}</div>
+                      <div><strong className="font-display">Score:</strong> {selected.risk_score ?? '—'}</div>
+                      <div><strong className="font-display">Rules:</strong> {selected.rules_version || '—'}</div>
+                    </div>
                   </div>
-                  <div className="rounded-lg border border-border p-3 text-sm">
-                    <h3 className="font-medium text-heading">Original (if refreshed)</h3>
+                  <div className="border border-border p-3.5 text-sm">
+                    <h3 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Original (if refreshed)</h3>
                     {selected.supersedes_id ? (
                       original ? (
-                        <>
-                          <div><strong>ID:</strong> <span className="font-mono text-xs">{original.id}</span></div>
-                          <div><strong>Created:</strong> {shortDate(original.created_at)}</div>
-                          <div><strong>Band:</strong> {original.risk_band}</div>
-                          <div><strong>Score:</strong> {original.risk_score ?? '—'}</div>
-                          <div><strong>Rules:</strong> {original.rules_version || '—'}</div>
-                        </>
-                      ) : <p className="text-muted">Original could not be loaded.</p>
-                    ) : <p className="text-muted">This analysis is not a refresh.</p>}
+                        <div className="space-y-1 text-text">
+                          <div><strong className="font-display">ID:</strong> <span className="font-mono text-xs">{original.id}</span></div>
+                          <div><strong className="font-display">Created:</strong> {shortDate(original.created_at)}</div>
+                          <div><strong className="font-display">Band:</strong> {original.risk_band}</div>
+                          <div><strong className="font-display">Score:</strong> {original.risk_score ?? '—'}</div>
+                          <div><strong className="font-display">Rules:</strong> {original.rules_version || '—'}</div>
+                        </div>
+                      ) : (
+                        <p className="text-muted">Original could not be loaded.</p>
+                      )
+                    ) : (
+                      <p className="text-muted">This analysis is not a refresh.</p>
+                    )}
                   </div>
                 </div>
                 {comparison && (
-                  <div className="rounded-lg border border-border bg-surface2/20 p-3">
-                    <h3 className="mb-2 font-medium text-heading">What changed</h3>
-                    <ul className="list-disc space-y-1 pl-5 text-sm">
+                  <div className="border-l-2 border-stamp bg-stamp/[0.06] p-3.5">
+                    <h3 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">What changed</h3>
+                    <ul className="list-disc space-y-1 pl-5 text-sm text-text">
                       {comparison.map((c, i) => <li key={i}>{c}</li>)}
                     </ul>
                   </div>
                 )}
-              </>
+              </div>
             )}
-          </section>
+          </Section>
         </div>
       )}
     </div>

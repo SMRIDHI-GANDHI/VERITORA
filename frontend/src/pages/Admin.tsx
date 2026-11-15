@@ -12,6 +12,8 @@ import {
 import { StatusLabel } from '../components/ui/StatusLabel'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Masthead } from '../components/ui/Masthead'
+import { Stamp } from '../components/ui/Stamp'
 
 const transitions: Record<string, Set<string>> = {
   pending_review: new Set(['under_review', 'evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed', 'redact']),
@@ -138,14 +140,15 @@ export function Admin() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Admin / Moderation</h1>
-        <p className="mt-2 text-muted">Role-gated moderation tools. Actions are auditable; provide clear reasons.</p>
-      </div>
+      <Masthead
+        title="Admin / Moderation"
+        subtitle="Role-gated moderation tools. Actions are auditable; provide clear reasons."
+        aside={<Stamp lines={['Role', 'moderator']} tone="ink" />}
+      />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-px border-b border-heading">
         {(['reports', 'ratings', 'appeals', 'audit'] as const).map((t) => (
-          <button key={t} type="button" onClick={() => setTab(t)} className={`rounded-lg border px-3 py-2 text-sm font-medium ${tab === t ? 'border-caramel bg-caramel/20 text-heading' : 'border-border bg-surface text-text'}`}>
+          <button key={t} type="button" onClick={() => setTab(t)} aria-pressed={tab === t} className={`-mb-px border-b-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${tab === t ? 'border-stamp bg-tint/60 text-heading' : 'border-transparent text-muted hover:text-heading'}`}>
             {t === 'reports' ? 'Reports queue' : t === 'ratings' ? 'Rating review' : t === 'appeals' ? 'Appeals' : 'Audit log'}
           </button>
         ))}
@@ -153,17 +156,17 @@ export function Admin() {
 
       {tab === 'appeals' ? (
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-          <section className="rounded-xl border border-border bg-surface p-4">
+          <section className="border border-border p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-heading">{t('admin.appeals.queue', { defaultValue: 'Appeals queue' })}</h2>
-              <button type="button" onClick={loadAppeals} className="rounded border border-border px-3 py-1.5 text-sm">{t('common.retry', { defaultValue: 'Refresh' })}</button>
+              <h2 className="font-display text-[17px] font-bold text-heading">{t('admin.appeals.queue', { defaultValue: 'Appeals queue' })}</h2>
+              <button type="button" onClick={loadAppeals} className="border border-heading px-3 py-1.5 text-sm font-semibold text-heading transition-colors hover:bg-tint/40">{t('common.retry', { defaultValue: 'Refresh' })}</button>
             </div>
             <p className="mb-3 text-sm text-muted">{t('admin.appeals.note', { defaultValue: 'Appeals are submitted by report owners. Review the message and linked report, then take an appropriate moderation action on the report.' })}</p>
             {appealsLoading ? <div className="space-y-2"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div> : appealsError ? <ErrorState message={appealsError} /> : appeals.length === 0 ? <p className="text-sm text-muted">{t('admin.appeals.empty', { defaultValue: 'No appeals found.' })}</p> : (
-              <ul className="space-y-2">
+              <ul className="divide-y divide-border">
                 {appeals.map((a) => (
                   <li key={a.id}>
-                    <button type="button" onClick={() => setAppealSelectedId(a.id)} className={`w-full rounded-lg border p-3 text-left ${appealSelectedId === a.id ? 'border-caramel bg-caramel/10' : 'border-border bg-surface'}`}>
+                    <button type="button" onClick={() => setAppealSelectedId(a.id)} className={`w-full p-3 text-left transition-colors ${appealSelectedId === a.id ? 'bg-tint/70 shadow-[inset_3px_0_0_0_var(--color-stamp)]' : 'border-border bg-surface'}`}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-heading">{a.report?.company_name || t('admin.appeals.unknownReport', { defaultValue: 'Report' })}</span>
                         {a.report?.moderation_status && <span className="text-xs text-muted">{a.report.moderation_status}</span>}
@@ -177,28 +180,28 @@ export function Admin() {
             )}
           </section>
 
-          <section className="rounded-xl border border-border bg-surface p-4">
-            <h2 className="text-lg font-semibold text-heading">{t('admin.appeals.detail', { defaultValue: 'Appeal detail' })}</h2>
+          <section className="border border-border p-4">
+            <h2 className="font-display text-[17px] font-bold text-heading">{t('admin.appeals.detail', { defaultValue: 'Appeal detail' })}</h2>
             {!selectedAppeal ? (
               <p className="mt-2 text-sm text-muted">{t('admin.appeals.select', { defaultValue: 'Select an appeal to review.' })}</p>
             ) : (
               <div className="mt-3 space-y-4">
-                <div className="rounded-lg border border-border bg-surface2/30 p-3 text-sm">
+                <div className="bg-tint/40 p-3 text-sm">
                   <p><strong>{t('admin.appeals.appealId', { defaultValue: 'Appeal ID' })}:</strong> {selectedAppeal.id}</p>
                   <p><strong>{t('admin.appeals.reportId', { defaultValue: 'Report ID' })}:</strong> {selectedAppeal.report_id}</p>
                   <p><strong>{t('admin.appeals.submittedAt', { defaultValue: 'Submitted' })}:</strong> {selectedAppeal.submitted_at || '—'}</p>
                 </div>
                 <div>
                   <h3 className="mb-1 font-medium text-heading">{t('admin.appeals.message', { defaultValue: 'Appeal message' })}</h3>
-                  <div className="rounded border border-border bg-surface p-2 text-sm whitespace-pre-wrap">{selectedAppeal.message || '—'}</div>
+                  <div className="border border-border bg-tint/30 p-2 text-sm whitespace-pre-wrap">{selectedAppeal.message || '—'}</div>
                 </div>
                 {selectedAppeal.report ? (
-                  <div className="space-y-2 rounded-lg border border-border p-3 text-sm">
+                  <div className="space-y-2 border border-border p-3 text-sm">
                     <h3 className="font-medium text-heading">{t('admin.appeals.linkedReport', { defaultValue: 'Linked report' })}</h3>
                     <p><strong>{t('admin.appeals.company', { defaultValue: 'Company' })}:</strong> {selectedAppeal.report.company_name}</p>
                     <p><strong>{t('admin.appeals.status', { defaultValue: 'Status' })}:</strong> {selectedAppeal.report.moderation_status}</p>
                     <p><strong>{t('admin.appeals.category', { defaultValue: 'Category' })}:</strong> {selectedAppeal.report.category}</p>
-                    <button type="button" onClick={() => openAppealReport(selectedAppeal)} className="mt-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium">
+                    <button type="button" onClick={() => openAppealReport(selectedAppeal)} className="mt-2 border border-heading px-3 py-2 text-sm font-semibold text-heading transition-colors hover:bg-tint/40">
                       {t('admin.appeals.openReport', { defaultValue: 'Open report in moderation queue' })}
                     </button>
                   </div>
@@ -210,8 +213,8 @@ export function Admin() {
           </section>
         </div>
       ) : tab !== 'reports' ? (
-        <section className="rounded-xl border border-border bg-surface p-6">
-          <h2 className="text-lg font-semibold text-heading capitalize">{tab}</h2>
+        <section className="border border-border p-5">
+          <h2 className="font-display text-[17px] font-bold text-heading capitalize">{tab}</h2>
           <p className="mt-2 text-sm text-muted">
             {tab === 'audit'
               ? t('admin.audit.unavailable', { defaultValue: 'Audit log viewing endpoint is not available in this build. Moderation actions are recorded server-side.' })
@@ -220,28 +223,28 @@ export function Admin() {
         </section>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-          <section className="rounded-xl border border-border bg-surface p-4">
+          <section className="border border-border p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-heading">Moderation queue</h2>
-              <button type="button" onClick={load} className="rounded border border-border px-3 py-1.5 text-sm">Refresh</button>
+              <h2 className="font-display text-[17px] font-bold text-heading">Moderation queue</h2>
+              <button type="button" onClick={load} className="border border-heading px-3 py-1.5 text-sm font-semibold text-heading transition-colors hover:bg-tint/40">Refresh</button>
             </div>
             <div className="mb-3">
-              <label htmlFor="status-filter" className="mb-1 block text-sm font-medium text-heading">Filter by status</label>
-              <select id="status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5">
+              <label htmlFor="status-filter" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Filter by status</label>
+              <select id="status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
                 <option value="">All</option>
                 {['pending_review', 'under_review', 'evidence_requested', 'substantiated', 'inconclusive', 'rejected', 'removed'].map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             {loading ? <div className="space-y-2"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div> : error ? <ErrorState message={error} /> : items.length === 0 ? <p className="text-sm text-muted">No reports found.</p> : (
-              <ul className="space-y-2">
+              <ul className="divide-y divide-border">
                 {items.map((r) => (
                   <li key={r.id}>
-                    <button type="button" onClick={() => setSelectedId(r.id)} className={`w-full rounded-lg border p-3 text-left ${selectedId === r.id ? 'border-caramel bg-caramel/10' : 'border-border bg-surface'}`}>
+                    <button type="button" onClick={() => setSelectedId(r.id)} className={`w-full p-3 text-left transition-colors ${selectedId === r.id ? 'bg-tint/70 shadow-[inset_3px_0_0_0_var(--color-stamp)]' : 'border-border bg-surface'}`}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-heading">{r.company_name}</span>
                         <span className="text-xs text-muted">{r.category}</span>
                         <StatusLabel status={r.moderation_status === 'substantiated' ? 'checked' : r.moderation_status === 'inconclusive' ? 'inconclusive' : r.moderation_status === 'rejected' || r.moderation_status === 'removed' ? 'warning' : 'under_review'} />
-                        {r.pii_flagged && <span className="rounded bg-danger/10 px-2 py-0.5 text-xs text-danger">PII flagged</span>}
+                        {r.pii_flagged && <span className="border border-danger px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-danger">PII flagged</span>}
                       </div>
                       <p className="mt-1 line-clamp-2 text-sm text-muted">{r.description}</p>
                     </button>
@@ -251,13 +254,13 @@ export function Admin() {
             )}
           </section>
 
-          <section className="rounded-xl border border-border bg-surface p-4">
-            <h2 className="text-lg font-semibold text-heading">Report detail & actions</h2>
+          <section className="border border-border p-4">
+            <h2 className="font-display text-[17px] font-bold text-heading">Report detail & actions</h2>
             {!selected ? (
               <p className="mt-2 text-sm text-muted">Select a report to review.</p>
             ) : (
               <div className="mt-3 space-y-4">
-                <div className="rounded-lg border border-border bg-surface2/30 p-3 text-sm">
+                <div className="bg-tint/40 p-3 text-sm">
                   <p><strong>ID:</strong> {selected.id}</p>
                   <p><strong>Status:</strong> {selected.moderation_status}</p>
                   <p><strong>Company:</strong> {selected.company_name}</p>
@@ -268,18 +271,18 @@ export function Admin() {
                 </div>
                 <div>
                   <h3 className="mb-1 font-medium text-heading">Original description (moderator view)</h3>
-                  <div className="max-h-48 overflow-auto rounded border border-border bg-surface p-2 text-sm whitespace-pre-wrap">{selected.description}</div>
+                  <div className="max-h-48 overflow-auto border border-border bg-tint/30 p-2 text-sm whitespace-pre-wrap">{selected.description}</div>
                 </div>
                 <div>
                   <h3 className="mb-1 font-medium text-heading">Current public summary</h3>
-                  <div className="rounded border border-border bg-surface p-2 text-sm">{selected.public_summary || '—'}</div>
+                  <div className="border border-border bg-tint/30 p-2 text-sm">{selected.public_summary || '—'}</div>
                 </div>
 
-                <div className="space-y-3 rounded-lg border border-border p-3">
+                <div className="space-y-3 border border-border p-3">
                   <h3 className="font-medium text-heading">Moderation action</h3>
                   <div>
-                    <label htmlFor="action" className="mb-1 block text-sm font-medium">Action</label>
-                    <select id="action" value={action} onChange={(e) => setAction(e.target.value as ModerationActionType)} className="w-full rounded-lg border border-border bg-surface p-2.5">
+                    <label htmlFor="action" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Action</label>
+                    <select id="action" value={action} onChange={(e) => setAction(e.target.value as ModerationActionType)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
                       {(['approve', 'reject', 'mark_inconclusive', 'request_evidence', 'remove', 'redact'] as ModerationActionType[]).map((a) => (
                         <option key={a} value={a} disabled={!canDo(selected.moderation_status, a)}>
                           {a}{!canDo(selected.moderation_status, a) ? ' (invalid transition)' : ''}
@@ -289,16 +292,16 @@ export function Admin() {
                     {allowed.length === 0 && <p className="mt-1 text-xs text-danger">No valid transitions from current status.</p>}
                   </div>
                   <div>
-                    <label htmlFor="reason" className="mb-1 block text-sm font-medium">Reason (required)</label>
-                    <textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={3} />
+                    <label htmlFor="reason" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Reason (required)</label>
+                    <textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} />
                   </div>
                   <div>
-                    <label htmlFor="pubsum" className="mb-1 block text-sm font-medium">Public summary (redacted, neutral)</label>
-                    <textarea id="pubsum" value={publicSummary} onChange={(e) => setPublicSummary(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={3} placeholder="Required for public visibility; use neutral, redacted wording." />
+                    <label htmlFor="pubsum" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Public summary (redacted, neutral)</label>
+                    <textarea id="pubsum" value={publicSummary} onChange={(e) => setPublicSummary(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} placeholder="Required for public visibility; use neutral, redacted wording." />
                   </div>
                   <div>
-                    <label htmlFor="pnote" className="mb-1 block text-sm font-medium">Private note (moderators only)</label>
-                    <textarea id="pnote" value={privateNote} onChange={(e) => setPrivateNote(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={2} />
+                    <label htmlFor="pnote" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Private note (moderators only)</label>
+                    <textarea id="pnote" value={privateNote} onChange={(e) => setPrivateNote(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={2} />
                     <p className="mt-1 text-xs text-muted">Private notes are not shown to non-moderators.</p>
                   </div>
                   {action === 'remove' && (
@@ -307,8 +310,8 @@ export function Admin() {
                       I confirm this removal/destructive moderation action.
                     </label>
                   )}
-                  {actionError && <div role="alert" className="rounded border border-danger/30 bg-danger/10 p-2 text-sm text-danger">{actionError}</div>}
-                  <button type="button" onClick={submitAction} disabled={saving || !canDo(selected.moderation_status, action)} className="rounded-lg bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-50">
+                  {actionError && <div role="alert" className="border-l-2 border-danger bg-danger/10 px-3 py-2 text-sm text-danger">{actionError}</div>}
+                  <button type="button" onClick={submitAction} disabled={saving || !canDo(selected.moderation_status, action)} className="border border-heading bg-action px-4 py-2 font-semibold text-buttonText transition-colors hover:bg-accent2 disabled:opacity-50">
                     {saving ? 'Applying…' : 'Apply action'}
                   </button>
                 </div>

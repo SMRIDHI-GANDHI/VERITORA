@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { explainWording, type WordingExplanation } from '../lib/api'
+import { Button } from './ui/Button'
 import { HighlightedText } from './HighlightedText'
 import { clauseSpans, type WordingExcerpt } from './wording'
 
@@ -38,7 +39,7 @@ export function WordingHighlights({ excerpts }: { excerpts: WordingExcerpt[] }) 
 
   return (
     <section aria-labelledby="wording-check-heading" className="mt-6 border-t border-border pt-5">
-      <h3 id="wording-check-heading" className="text-base font-semibold text-heading">
+      <h3 id="wording-check-heading" className="font-display text-base font-bold text-heading">
         {t('analyze.result.translator.wording.title', { defaultValue: 'Wording check' })}
       </h3>
       <p className="mt-1 text-sm text-muted">
@@ -57,14 +58,13 @@ export function WordingHighlights({ excerpts }: { excerpts: WordingExcerpt[] }) 
       ) : (
         <>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button
+            <Button
               type="button"
               onClick={() => void onExplain()}
               disabled={status === 'loading'}
-              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium disabled:opacity-50"
             >
               {buttonLabel}
-            </button>
+            </Button>
             {status === 'loading' && (
               <span role="status" className="text-sm text-muted">
                 {t('analyze.result.translator.wording.loading', { defaultValue: 'Checking wording…' })}
@@ -86,17 +86,17 @@ export function WordingHighlights({ excerpts }: { excerpts: WordingExcerpt[] }) 
               const result = results[excerpt.text]
               const spans = result ? clauseSpans(excerpt.text, result.explanations) : []
               return (
-                <li key={excerpt.text} className="rounded-lg border border-border bg-surface2/30 p-3">
+                <li key={excerpt.text} className="entry pb-3">
                   {excerpt.codes.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {excerpt.codes.map((code) => (
-                        <span key={code} className="rounded border border-border px-2 py-0.5 text-xs font-medium">
+                        <span key={code} className="border border-border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-heading">
                           {code}
                         </span>
                       ))}
                     </div>
                   )}
-                  <div className="rounded border border-border bg-surface p-3">
+                  <div className="border border-border bg-tint/30 p-3">
                     <HighlightedText text={excerpt.text} spans={spans} />
                   </div>
 
@@ -110,7 +110,7 @@ export function WordingHighlights({ excerpts }: { excerpts: WordingExcerpt[] }) 
 
                   {result && (
                     <div className="mt-2 text-sm" aria-live="polite">
-                      <h4 className="font-medium text-heading">
+                      <h4 className="font-display text-[15px] font-bold text-heading">
                         {t('analyze.result.translator.wording.explanations', {
                           defaultValue: 'Plain-language explanations',
                         })}

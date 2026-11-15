@@ -5,12 +5,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        espresso: 'rgb(var(--color-espresso) / <alpha-value>)',
-        cream: 'rgb(var(--color-cream) / <alpha-value>)',
-        caramel: 'rgb(var(--color-caramel) / <alpha-value>)',
-        latte: 'rgb(var(--color-latte) / <alpha-value>)',
-        mocha: 'rgb(var(--color-mocha) / <alpha-value>)',
-        sage: 'rgb(var(--color-sage) / <alpha-value>)',
+        cover: 'rgb(var(--color-cover) / <alpha-value>)',
+        paper: 'rgb(var(--color-paper) / <alpha-value>)',
+        stamp: 'rgb(var(--color-stamp) / <alpha-value>)',
+        tint: 'rgb(var(--color-tint) / <alpha-value>)',
+        ash: 'rgb(var(--color-ash) / <alpha-value>)',
         bg: 'rgb(var(--color-bg) / <alpha-value>)',
         surface: 'rgb(var(--color-surface) / <alpha-value>)',
         surface2: 'rgb(var(--color-surface-2) / <alpha-value>)',
@@ -21,6 +20,7 @@ export default {
         accent: 'rgb(var(--color-accent) / <alpha-value>)',
         accent2: 'rgb(var(--color-accent-2) / <alpha-value>)',
         primary: 'rgb(var(--color-primary) / <alpha-value>)',
+        action: 'rgb(var(--color-action) / <alpha-value>)',
         buttonBg: 'rgb(var(--color-button-bg) / <alpha-value>)',
         buttonText: 'rgb(var(--color-button-text) / <alpha-value>)',
         danger: 'rgb(var(--color-danger) / <alpha-value>)',
@@ -28,10 +28,26 @@ export default {
         success: 'rgb(var(--color-success) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Inter', 'Manrope', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
+        sans: ['Archivo', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
+        display: ['Libre Baskerville', 'Noto Serif Devanagari', 'Georgia', 'serif'],
+        mono: ['Courier Prime', 'Noto Sans Devanagari', 'ui-monospace', 'monospace'],
+      },
+      borderRadius: {
+        none: '0',
+        sm: '2px',
+        DEFAULT: '3px',
+        md: '4px',
+        lg: '5px',
+        xl: '6px',
+        '2xl': '8px',
+        '3xl': '10px',
+        full: '999px',
+      },
+      boxShadow: {
+        paper: '0 1px 0 rgb(var(--color-border)), 0 10px 24px -18px rgb(var(--color-heading) / 0.55)',
+        lift: '0 2px 0 rgb(var(--color-border)), 0 18px 34px -22px rgb(var(--color-heading) / 0.6)',
       },
     },
   },
   plugins: [],
 }
-

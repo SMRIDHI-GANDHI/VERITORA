@@ -1,80 +1,104 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Archivo:wght@400;500;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* VERITORA — "Dated Stamp": an official file.
+     Paper ground, ink-blue file cover for the shell and actions, vermillion
+     quarantined to stamps and critical state. Text-bearing tokens are chosen so
+     every foreground/background pair below meets WCAG 2 AA (>= 4.5:1); see
+     src/theme/contrast.test.ts, which fails the build if a token regresses. */
   :root {
-    /* VERITORA - Coffee-inspired premium palette (Light default).
-       Text-bearing tokens are chosen so that every foreground/background
-       pair below meets WCAG 2 AA (>= 4.5:1). See src/theme/contrast.test.ts,
-       which enforces this and fails the build if a token regresses. */
-    --color-espresso: 59 36 27;
-    --color-cream: 245 235 221;
-    --color-caramel: 197 139 88;
-    --color-latte: 230 203 169;
-    --color-mocha: 105 78 57;
-    --color-sage: 84 100 74;
+    --color-cover: 39 64 107;      /* file cover — rail, primary buttons */
+    --color-paper: 246 243 234;    /* stays light in both themes: foreground on the cover */
+    --color-stamp: 192 57 43;      /* vermillion — stamps and critical state only */
+    --color-tint: 207 199 180;     /* hairline rules and hover fills */
+    --color-ash: 92 86 72;         /* quiet metadata */
 
-    --color-bg: 245 235 221;
-    --color-surface: 245 235 221;
-    --color-surface-2: 230 203 169;
-    --color-text: 99 74 57;
-    --color-heading: 59 36 27;
-    --color-muted: 105 78 57;
-    --color-border: 230 203 169;
-    --color-accent: 132 82 42;
-    --color-accent-2: 105 78 57;
-    --color-primary: 59 36 27;
-    --color-button-bg: 197 139 88;
-    --color-button-text: 36 23 15;
-    --color-danger: 158 52 50;
-    --color-warning: 132 78 12;
-    --color-success: 84 100 74;
-    --color-neutral: 105 78 57;
+    --color-bg: 246 243 234;
+    --color-surface: 253 251 245;
+    --color-surface-2: 239 233 220;
+    --color-text: 31 28 23;
+    --color-heading: 20 18 15;
+    --color-muted: 92 86 72;
+    --color-border: 207 199 180;
+    --color-accent: 39 64 107;
+    --color-accent-2: 63 98 147;
+    --color-primary: 39 64 107;
+    --color-action: 39 64 107;
+    --color-button-bg: 39 64 107;
+    --color-button-text: 246 243 234;
+    --color-danger: 179 38 30;
+    --color-warning: 138 97 8;
+    --color-success: 47 107 79;
+    --color-neutral: 92 86 72;
   }
   .dark {
-    /* `cream` stays a LIGHT colour in both themes: it is used as foreground
-       text on the dark `espresso` header. Redefining it as a dark colour
-       made the header navigation unreadable in dark mode. */
-    --color-espresso: 59 36 27;
-    --color-cream: 245 235 221;
-    --color-caramel: 197 139 88;
-    --color-latte: 66 48 38;
-    --color-mocha: 190 158 128;
-    --color-sage: 134 148 118;
+    /* The same file under a desk lamp. `paper` stays LIGHT in both themes: it is
+       the foreground on the ink-blue cover. */
+    --color-cover: 29 47 79;
+    --color-paper: 246 243 234;
+    --color-stamp: 224 122 99;
+    --color-tint: 74 68 56;
+    --color-ash: 164 154 134;
 
-    --color-bg: 28 22 18;
-    --color-surface: 36 28 22;
-    --color-surface-2: 48 38 30;
-    --color-text: 214 198 180;
-    --color-heading: 245 235 221;
-    --color-muted: 170 148 128;
-    --color-border: 82 64 50;
-    --color-accent: 197 139 88;
-    --color-accent-2: 149 117 91;
-    --color-primary: 59 36 27;
-    --color-button-bg: 197 139 88;
-    --color-button-text: 36 23 15;
-    --color-danger: 222 138 136;
+    --color-bg: 25 23 18;
+    --color-surface: 33 30 24;
+    --color-surface-2: 42 38 31;
+    --color-text: 222 215 199;
+    --color-heading: 243 239 228;
+    --color-muted: 164 154 134;
+    --color-border: 66 60 49;
+    --color-accent: 143 176 224;
+    --color-accent-2: 106 146 199;
+    --color-primary: 74 111 165;
+    --color-action: 74 111 165;
+    --color-button-bg: 74 111 165;
+    --color-button-text: 246 243 234;
+    --color-danger: 227 139 134;
     --color-warning: 226 170 90;
-    --color-success: 134 148 118;
-    --color-neutral: 149 117 91;
+    --color-success: 143 168 148;
+    --color-neutral: 164 154 134;
   }
   html, body, #root {
     height: 100%;
   }
   body {
     @apply bg-bg text-text antialiased;
-    font-family: 'Inter', 'Manrope', 'Noto Sans Devanagari', system-ui, -apple-system, Segoe UI, sans-serif;
+    font-family: 'Archivo', 'Noto Sans Devanagari', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-feature-settings: 'tnum' 0;
+    text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply text-heading;
+    font-family: 'Libre Baskerville', 'Noto Serif Devanagari', Georgia, serif;
   }
-  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-    @apply outline-none ring-2 ring-caramel ring-offset-2 ring-offset-bg;
+  /* Data, dates, codes and table figures align in columns. */
+  td, th, .tnum {
+    font-variant-numeric: tabular-nums;
   }
+  ::selection {
+    background: rgb(var(--color-stamp) / 0.24);
+    color: rgb(var(--color-heading));
+  }
+  input, textarea { caret-color: rgb(var(--color-stamp)); }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-bg;
+  }
+  * {
+    scrollbar-color: rgb(var(--color-tint)) rgb(var(--color-bg));
+    scrollbar-width: thin;
+  }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: rgb(var(--color-bg)); }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-tint));
+    border: 3px solid rgb(var(--color-bg));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ash)); }
 }
 
 /* NFR-A11Y-1: honour the user's reduced-motion preference. This covers the
@@ -96,7 +120,46 @@
 
 @layer components {
   .skip-link {
-    /* `caramel` + `buttonText` keeps >= 4.5:1; `accent` + dark text did not. */
-    @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-caramel focus:px-3 focus:py-2 focus:text-buttonText;
+    @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:border focus:border-heading focus:bg-paper focus:px-4 focus:py-2 focus:font-semibold focus:text-heading;
+  }
+  /* The masthead closes with a true double rule: 1px ink, 2px gap, 1px ink. */
+  .rule-double {
+    @apply h-1 border-y border-heading;
+  }
+  .rule-double-quiet {
+    @apply h-1 border-y border-border;
+  }
+  /* Entries are separated by a dotted hairline, like a filled-in form. */
+  .entry {
+    @apply border-b border-dotted border-border;
+  }
+  .field-label {
+    @apply font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-muted;
+  }
+}
+
+/* The one authored motion: an impression pressing onto the row. Global
+   reduced-motion already collapses this to its final frame. */
+@keyframes stamp-press {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px) scale(1.14);
+    filter: blur(1.5px);
+  }
+  62% {
+    opacity: 1;
+    transform: translateY(0) scale(0.985);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@layer components {
+  .stamp-press {
+    animation: stamp-press 420ms cubic-bezier(0.2, 0.8, 0.25, 1) both;
   }
 }

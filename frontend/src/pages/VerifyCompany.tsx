@@ -2,6 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { StatusLabel, type StatusKind } from '../components/ui/StatusLabel'
 import { ErrorState } from '../components/ui/ErrorState'
+import { Masthead } from '../components/ui/Masthead'
+import { Section } from '../components/ui/Section'
+import { Stamp } from '../components/ui/Stamp'
+import { Button } from '../components/ui/Button'
+import { buttonClass } from '../components/ui/buttonStyles'
+import { fieldClass, fieldLabelClass } from '../components/ui/Field'
 import { HttpError, verifyCompany, type VerificationCheck, type VerifyCompanyResponse } from '../lib/api'
 
 function statusKind(s: VerificationCheck['status']): StatusKind {
@@ -54,68 +60,64 @@ export function VerifyCompany() {
     navigate('/analyze', { state: { company_name: companyName, company_website: website } })
   }
 
-  const inputCls = 'w-full rounded-lg border border-border bg-surface p-2.5 text-text'
-  const labelCls = 'mb-1 block text-sm font-medium text-heading'
-
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Company Verification</h1>
-        <p className="mt-2 text-muted">
-          Check available signals about a company. Results show matched, mismatched, and unknown information based on available sources.
-        </p>
-        <p className="mt-2 rounded-lg border border-border bg-surface2/40 p-3 text-sm">
-          Note: A company&apos;s existence does not prove that a specific job posting or recruiter is authorized.
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl space-y-8">
+      <Masthead
+        title="Company Verification"
+        subtitle="Check available signals about a company. Results show matched, mismatched, and unknown information based on available sources."
+        aside={<Stamp lines={['Check', 'company']} tone="ink" />}
+      />
 
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-border bg-surface p-6" noValidate>
-        <div>
-          <label htmlFor="cv-name" className={labelCls}>Company name <span aria-hidden="true">*</span></label>
-          <input id="cv-name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputCls} required />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div><label htmlFor="cv-web" className={labelCls}>Website (optional)</label><input id="cv-web" value={website} onChange={(e) => setWebsite(e.target.value)} className={inputCls} placeholder="https://..." /></div>
-          <div><label htmlFor="cv-email" className={labelCls}>Email domain (optional)</label><input id="cv-email" value={emailDomain} onChange={(e) => setEmailDomain(e.target.value)} className={inputCls} placeholder="example.com" /></div>
-          <div className="md:col-span-2"><label htmlFor="cv-reg" className={labelCls}>Registration ID (optional)</label><input id="cv-reg" value={registrationId} onChange={(e) => setRegistrationId(e.target.value)} className={inputCls} /></div>
-        </div>
+      <p className="max-w-[68ch] border-l-2 border-cover bg-cover/[0.05] px-4 py-3 text-sm leading-relaxed text-text">
+        Note: A company&apos;s existence does not prove that a specific job posting or recruiter is authorized.
+      </p>
+
+      <form onSubmit={onSubmit} className="space-y-5" noValidate>
+        <Section title="Company details" meta="required fields marked">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label htmlFor="cv-name" className={fieldLabelClass}>Company name <span aria-hidden="true">*</span></label>
+              <input id="cv-name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={fieldClass} required />
+            </div>
+            <div><label htmlFor="cv-web" className={fieldLabelClass}>Website (optional)</label><input id="cv-web" value={website} onChange={(e) => setWebsite(e.target.value)} className={fieldClass} placeholder="https://..." /></div>
+            <div><label htmlFor="cv-email" className={fieldLabelClass}>Email domain (optional)</label><input id="cv-email" value={emailDomain} onChange={(e) => setEmailDomain(e.target.value)} className={fieldClass} placeholder="example.com" /></div>
+            <div className="md:col-span-2"><label htmlFor="cv-reg" className={fieldLabelClass}>Registration ID (optional)</label><input id="cv-reg" value={registrationId} onChange={(e) => setRegistrationId(e.target.value)} className={fieldClass} /></div>
+          </div>
+        </Section>
         {error && <ErrorState message={error} />}
-        <div className="flex gap-3">
-          <button type="submit" disabled={submitting} className="rounded-lg bg-caramel px-5 py-2.5 font-semibold text-buttonText disabled:opacity-60">
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" disabled={submitting} size="lg">
             {submitting ? 'Verifying…' : 'Verify company'}
-          </button>
+          </Button>
           {result && (
-            <button type="button" onClick={addToAnalysis} className="rounded-lg border border-border bg-surface px-4 py-2.5 font-medium text-heading">
+            <Button variant="secondary" type="button" onClick={addToAnalysis} size="lg">
               Add this to my analysis
-            </button>
+            </Button>
           )}
         </div>
       </form>
 
       {result && (
-        <div className="space-y-6" aria-live="polite">
-          <section className="rounded-xl border border-border bg-surface p-6">
-            <h2 className="mb-2 text-lg font-semibold text-heading">Overall status</h2>
-            <StatusLabel status={statusKind(result.overall_status)} />
-            <p className="mt-2 text-sm text-muted">Checked at: {result.checked_at || '—'}</p>
-          </section>
+        <div className="space-y-8" aria-live="polite">
+          <Section title="Overall status" meta={result.checked_at ? `checked ${result.checked_at}` : 'not checked'}>
+            <div className="flex flex-wrap items-center gap-4">
+              <StatusLabel status={statusKind(result.overall_status)} />
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">Checked at: {result.checked_at || '—'}</p>
+            </div>
+          </Section>
 
-          <section className="rounded-xl border border-border bg-surface p-6">
-            <h2 className="mb-3 text-lg font-semibold text-heading">Verification checks</h2>
+          <Section title="Verification checks" meta={`${result.checks.length} run`}>
             {result.checks.length === 0 ? (
               <p className="text-sm text-muted">No checks available.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
+                  <caption className="sr-only">Verification checks for this company</caption>
                   <thead>
                     <tr className="border-b border-border text-left text-muted">
-                      <th className="py-2 pr-3">Check</th>
-                      <th className="py-2 pr-3">Status</th>
-                      <th className="py-2 pr-3">Matched</th>
-                      <th className="py-2 pr-3">Mismatched</th>
-                      <th className="py-2 pr-3">Unknown / not checked</th>
-                      <th className="py-2 pr-3">Source</th>
-                      <th className="py-2">Checked at</th>
+                      {['Check', 'Status', 'Matched', 'Mismatched', 'Unknown / not checked', 'Source', 'Checked at'].map((h) => (
+                        <th key={h} className="py-2 pr-3 font-mono text-[11px] font-bold uppercase tracking-[0.14em]">{h}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -123,13 +125,13 @@ export function VerifyCompany() {
                       const reason = c.details && typeof c.details === 'object' ? (c.details as Record<string, unknown>).reason : undefined
                       return (
                         <tr key={i} className="border-b border-border/60 align-top">
-                          <td className="py-2 pr-3 font-medium">{c.check_type}</td>
+                          <td className="py-2 pr-3 font-medium text-heading">{c.check_type}</td>
                           <td className="py-2 pr-3"><StatusLabel status={statusKind(c.status)} />{reason ? <div className="mt-1 text-xs text-muted">Reason: {String(reason)}</div> : null}</td>
                           <td className="py-2 pr-3">{c.matched_fields?.length ? c.matched_fields.join(', ') : '—'}</td>
                           <td className="py-2 pr-3">{c.mismatched_fields?.length ? c.mismatched_fields.join(', ') : '—'}</td>
                           <td className="py-2 pr-3">{c.unknown_fields?.length ? c.unknown_fields.join(', ') : '—'}</td>
-                          <td className="py-2 pr-3">{c.source_url ? <a className="text-accent underline" href={c.source_url} target="_blank" rel="noopener noreferrer">Source</a> : '—'}</td>
-                          <td className="py-2">{c.checked_at || '—'}</td>
+                          <td className="py-2 pr-3">{c.source_url ? <a className="text-accent underline underline-offset-4" href={c.source_url} target="_blank" rel="noopener noreferrer">Source</a> : '—'}</td>
+                          <td className="py-2 font-mono text-xs text-muted">{c.checked_at || '—'}</td>
                         </tr>
                       )
                     })}
@@ -137,19 +139,18 @@ export function VerifyCompany() {
                 </table>
               </div>
             )}
-          </section>
+          </Section>
 
-          <section className="rounded-xl border border-border bg-surface p-6">
-            <h2 className="mb-3 text-lg font-semibold text-heading">Community reports (approved)</h2>
-            <p className="text-sm text-muted">
+          <Section title="Community reports (approved)" meta={`${result.community?.approved_report_count ?? 0} approved`}>
+            <p className="max-w-[68ch] text-sm leading-relaxed text-muted">
               {result.community?.note || 'User-submitted reports are shown only after moderation and are not treated as confirmed facts.'}
             </p>
-            <p className="mt-2 text-sm">Approved report count: {result.community?.approved_report_count ?? 0}</p>
+            <p className="mt-3 text-sm text-text">Approved report count: {result.community?.approved_report_count ?? 0}</p>
             <p className="mt-2 text-xs text-muted">Labels are neutral and reflect moderation status, not confirmation of wrongdoing.</p>
-          </section>
+          </Section>
 
           <div className="text-sm">
-            <Link to="/analyze" className="text-accent underline">Go to job analyzer</Link>
+            <Link to="/analyze" className={buttonClass('ghost')}>Go to job analyzer</Link>
           </div>
         </div>
       )}

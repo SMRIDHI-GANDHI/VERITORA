@@ -76,6 +76,8 @@ const pairs: Pair[] = [
     fg: (p) => p.muted,
     bg: (p) => over(p['surface-2'], p.bg, 0.4),
   },
+  { label: 'ash metadata on bg', fg: (p) => p.ash, bg: (p) => p.bg },
+  { label: 'ash metadata on surface', fg: (p) => p.ash, bg: (p) => p.surface },
   { label: 'accent link on surface', fg: (p) => p.accent, bg: (p) => p.surface },
   { label: 'accent link on bg', fg: (p) => p.accent, bg: (p) => p.bg },
   {
@@ -111,28 +113,34 @@ const pairs: Pair[] = [
     fg: (p) => p.success,
     bg: (p) => over(p.success, p.surface, 0.1),
   },
+  { label: 'stamp on surface', fg: (p) => p.stamp, bg: (p) => p.surface },
   {
-    label: 'mocha on mocha/10 tint',
-    fg: (p) => p.mocha,
-    bg: (p) => over(p.mocha, p.surface, 0.1),
+    label: 'stamp on stamp/10 tint',
+    fg: (p) => p.stamp,
+    bg: (p) => over(p.stamp, p.surface, 0.1),
+  },
+  {
+    label: 'ash on ash/10 tint',
+    fg: (p) => p.ash,
+    bg: (p) => over(p.ash, p.surface, 0.1),
   },
   { label: 'button text on button bg', fg: (p) => p['button-text'], bg: (p) => p['button-bg'] },
-  // Header: cream text on the espresso bar (both themes).
-  { label: 'cream on espresso header', fg: (p) => p.cream, bg: (p) => p.espresso },
+  // The file cover: paper text on the ink-blue rail (both themes).
+  { label: 'paper on cover rail', fg: (p) => p.paper, bg: (p) => p.cover },
   {
-    label: 'cream/90 on espresso header',
-    fg: (p) => over(p.cream, p.espresso, 0.9),
-    bg: (p) => p.espresso,
+    label: 'paper/90 on cover rail',
+    fg: (p) => over(p.paper, p.cover, 0.9),
+    bg: (p) => p.cover,
   },
   {
-    label: 'cream on espresso/80 over bg',
-    fg: (p) => p.cream,
-    bg: (p) => over(p.espresso, p.bg, 0.8),
+    label: 'paper on cover/80 over bg',
+    fg: (p) => p.paper,
+    bg: (p) => over(p.cover, p.bg, 0.8),
   },
   {
-    label: 'cream on caramel/20 active nav',
-    fg: (p) => p.cream,
-    bg: (p) => over(p.caramel, p.espresso, 0.2),
+    label: 'paper on cover/20 active nav',
+    fg: (p) => p.paper,
+    bg: (p) => over(p.paper, p.cover, 0.2),
   },
 ]
 
@@ -147,10 +155,16 @@ describe('palette contrast (WCAG 2 AA)', () => {
     }
   }
 
-  it('cream remains a light colour in the dark theme (header legibility)', () => {
-    const lightCream = palettes.light.cream
-    const darkCream = palettes.dark.cream
-    expect(luminance(darkCream)).toBeGreaterThan(luminance(palettes.dark.espresso))
-    expect(darkCream).toEqual(lightCream)
+  it('paper remains a light colour in the dark theme (cover rail legibility)', () => {
+    const lightPaper = palettes.light.paper
+    const darkPaper = palettes.dark.paper
+    expect(luminance(darkPaper)).toBeGreaterThan(luminance(palettes.dark.cover))
+    expect(darkPaper).toEqual(lightPaper)
+  })
+
+  it('every token exists in both themes', () => {
+    for (const token of Object.keys(palettes.light)) {
+      expect(palettes.dark[token], `token ${token} is missing from the dark theme`).toBeDefined()
+    }
   })
 })

@@ -7,7 +7,9 @@ import {
   type WatchlistEntryItem,
 } from '../lib/api'
 import { ErrorState } from '../components/ui/ErrorState'
+import { Masthead } from '../components/ui/Masthead'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Stamp } from '../components/ui/Stamp'
 
 const transitions: Record<string, string[]> = {
   unverified_signal: ['under_review', 'cleared'],
@@ -122,41 +124,42 @@ export function AdminWatchlist() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Watchlist manager</h1>
-        <p className="mt-2 text-muted">Manage internal watchlist entries with evidence-backed, auditable transitions. Public view must remain neutral.</p>
-      </div>
+      <Masthead
+        title="Watchlist manager"
+        subtitle="Manage internal watchlist entries with evidence-backed, auditable transitions. Public view must remain neutral."
+        aside={<Stamp lines={['Internal', 'watchlist']} tone="ink" />}
+      />
 
-      <div role="note" className="rounded-xl border border-border bg-surface2/30 p-4 text-sm">
+      <div role="note" className="border border-border bg-tint/30 p-4 text-sm">
         <strong>Public wording rule:</strong> Public surfaces may only show neutral flags (e.g. "additional verification recommended"), never internal labels, reasons, or evidence.
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-        <section className="rounded-xl border border-border bg-surface p-4 space-y-4">
-          <h2 className="text-lg font-semibold text-heading">Create entry</h2>
+        <section className="border border-border p-4 space-y-4">
+          <h2 className="font-display text-[17px] font-bold text-heading">Create entry</h2>
           <div>
-            <label htmlFor="wl-ref" className="mb-1 block text-sm font-medium">Entity reference (internal key/hash/ref)</label>
-            <input id="wl-ref" value={newRef} onChange={(e) => setNewRef(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" placeholder="e.g. company:example or hashed ref" />
+            <label htmlFor="wl-ref" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Entity reference (internal key/hash/ref)</label>
+            <input id="wl-ref" value={newRef} onChange={(e) => setNewRef(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" placeholder="e.g. company:example or hashed ref" />
           </div>
           <div>
-            <label htmlFor="wl-reason" className="mb-1 block text-sm font-medium">Reason</label>
-            <textarea id="wl-reason" value={newReason} onChange={(e) => setNewReason(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={2} />
+            <label htmlFor="wl-reason" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Reason</label>
+            <textarea id="wl-reason" value={newReason} onChange={(e) => setNewReason(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={2} />
           </div>
           <div>
-            <label htmlFor="wl-evidence" className="mb-1 block text-sm font-medium">Evidence reference</label>
-            <input id="wl-evidence" value={newEvidence} onChange={(e) => setNewEvidence(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" />
+            <label htmlFor="wl-evidence" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Evidence reference</label>
+            <input id="wl-evidence" value={newEvidence} onChange={(e) => setNewEvidence(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" />
           </div>
-          <button type="button" onClick={createEntry} disabled={creating || !newRef.trim()} className="rounded-lg bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-50">
+          <button type="button" onClick={createEntry} disabled={creating || !newRef.trim()} className="border border-heading bg-action px-4 py-2 font-semibold text-buttonText transition-colors hover:bg-accent2 disabled:opacity-50">
             {creating ? 'Creating…' : 'Create entry'}
           </button>
 
           <div className="border-t border-border pt-4">
-            <h2 className="mb-2 text-lg font-semibold text-heading">Entries</h2>
+            <h2 className="mb-2 font-display text-[17px] font-bold text-heading">Entries</h2>
             {loading ? <Skeleton className="h-40 w-full" /> : error ? <ErrorState message={error} /> : items.length === 0 ? <p className="text-sm text-muted">No entries.</p> : (
-              <ul className="space-y-2">
+              <ul className="divide-y divide-border">
                 {items.map((e) => (
                   <li key={e.id}>
-                    <button type="button" onClick={() => setSelectedId(e.id)} className={`w-full rounded-lg border p-3 text-left ${selectedId === e.id ? 'border-caramel bg-caramel/10' : 'border-border'}`}>
+                    <button type="button" onClick={() => setSelectedId(e.id)} className={`w-full p-3 text-left transition-colors ${selectedId === e.id ? 'bg-tint/70 shadow-[inset_3px_0_0_0_var(--color-stamp)]' : 'border-border'}`}>
                       <div className="font-mono text-xs text-muted">{e.entity_reference}</div>
                       <div className="mt-1 text-sm"><strong>Status:</strong> {e.status}</div>
                       {e.reason && <div className="mt-1 text-xs text-muted line-clamp-2">{e.reason}</div>}
@@ -168,13 +171,13 @@ export function AdminWatchlist() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-border bg-surface p-4 space-y-4">
-          <h2 className="text-lg font-semibold text-heading">Entry detail & transitions</h2>
+        <section className="border border-border p-4 space-y-4">
+          <h2 className="font-display text-[17px] font-bold text-heading">Entry detail & transitions</h2>
           {!selected ? (
             <p className="text-sm text-muted">Select an entry.</p>
           ) : (
             <>
-              <div className="rounded-lg border border-border bg-surface2/20 p-3 text-sm space-y-1">
+              <div className="bg-tint/40 p-3 text-sm space-y-1">
                 <div><strong>ID:</strong> <span className="font-mono text-xs">{selected.id}</span></div>
                 <div><strong>Entity:</strong> <span className="font-mono text-xs">{selected.entity_reference}</span></div>
                 <div><strong>Status:</strong> {selected.status}</div>
@@ -185,21 +188,21 @@ export function AdminWatchlist() {
                 <div><strong>Reviewed at:</strong> {selected.reviewed_at || '—'}</div>
               </div>
 
-              <div className="rounded-lg border border-border p-3 space-y-3">
+              <div className="border border-border p-3 space-y-3">
                 <h3 className="font-medium text-heading">Status transition (audited)</h3>
                 {allowed.length === 0 ? (
                   <p className="text-sm text-muted">No transitions available from current status.</p>
                 ) : (
                   <>
                     <div>
-                      <label htmlFor="wl-target-status" className="mb-1 block text-sm font-medium">Target status</label>
-                      <select id="wl-target-status" value={actionStatus} onChange={(e) => setActionStatus(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5">
+                      <label htmlFor="wl-target-status" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Target status</label>
+                      <select id="wl-target-status" value={actionStatus} onChange={(e) => setActionStatus(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text">
                         {allowed.map((s) => <option key={s} value={s}>{s}{s === 'confirmed_pattern' ? ' (requires moderator approval)' : ''}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="wl-action-reason" className="mb-1 block text-sm font-medium">Reason (required)</label>
-                      <textarea id="wl-action-reason" value={actionReason} onChange={(e) => setActionReason(e.target.value)} className="w-full rounded-lg border border-border bg-surface p-2.5" rows={3} />
+                      <label htmlFor="wl-action-reason" className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Reason (required)</label>
+                      <textarea id="wl-action-reason" value={actionReason} onChange={(e) => setActionReason(e.target.value)} className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text" rows={3} />
                     </div>
                     {actionStatus === 'confirmed_pattern' && (
                       <label className="flex items-center gap-2 text-sm">
@@ -207,8 +210,8 @@ export function AdminWatchlist() {
                         I confirm this elevated status is evidence-backed and approved for review.
                       </label>
                     )}
-                    {actionError && <div role="alert" className="rounded border border-danger/30 bg-danger/10 p-2 text-sm text-danger">{actionError}</div>}
-                    <button type="button" onClick={applyTransition} disabled={saving || !actionStatus} className="rounded-lg bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-50">
+                    {actionError && <div role="alert" className="border-l-2 border-danger bg-danger/10 px-3 py-2 text-sm text-danger">{actionError}</div>}
+                    <button type="button" onClick={applyTransition} disabled={saving || !actionStatus} className="border border-heading bg-action px-4 py-2 font-semibold text-buttonText transition-colors hover:bg-accent2 disabled:opacity-50">
                       {saving ? 'Applying…' : 'Apply transition'}
                     </button>
                     <p className="text-xs text-muted">Actions are recorded in the audit log on the server.</p>
@@ -216,14 +219,14 @@ export function AdminWatchlist() {
                 )}
               </div>
 
-              <div className="rounded-lg border border-border p-3 space-y-2">
+              <div className="border border-border p-3 space-y-2">
                 <h3 className="font-medium text-heading">Appeals queue</h3>
                 <p className="text-sm text-muted">A dedicated appeals listing endpoint is not available in this backend build. Appeals submitted via API reopen entries to <code>under_review</code> and are auditable.</p>
               </div>
 
-              <div className="rounded-lg border border-border p-3 space-y-2">
+              <div className="border border-border p-3 space-y-2">
                 <h3 className="font-medium text-heading">Neutral-language public preview</h3>
-                <pre className="overflow-auto rounded border border-border bg-surface2/20 p-2 text-xs whitespace-pre-wrap">{publicPreview || '—'}</pre>
+                <pre className="overflow-auto border border-border bg-tint/40 p-2 text-xs whitespace-pre-wrap">{publicPreview || '—'}</pre>
               </div>
             </>
           )}

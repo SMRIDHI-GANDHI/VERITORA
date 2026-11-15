@@ -17,7 +17,10 @@
     "adminNetwork": "Admin: Network",
     "adminWatchlist": "Admin: Watchlist",
     "adminTrends": "Admin: Trends",
-    "myPassports": "My Passports"
+    "myPassports": "My Passports",
+    "menu": "Menu",
+    "logout": "Log out",
+    "exposure": "Data Exposure"
   },
   "analyze": {
     "message": {
@@ -160,7 +163,8 @@
     "loading": "Loading",
     "empty": "No data available",
     "error": "Something went wrong",
-    "retry": "Retry"
+    "retry": "Retry",
+    "close": "Close"
   },
   "cyber": {
     "title": "Report Cybercrime",
@@ -259,5 +263,16 @@
       "revoked": "Revoked",
       "expired": "Expired"
     }
+  },
+  "rail": {
+    "file": "Evidence desk",
+    "work": "Work",
+    "records": "Records",
+    "account": "Account",
+    "admin": "Admin"
+  },
+  "auth": {
+    "tagline": "Verify opportunities. Detect deception. Protect job seekers.",
+    "passwordHint": "At least 8 characters."
   }
 }

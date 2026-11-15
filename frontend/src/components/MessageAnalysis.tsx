@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AnalysisResult, RiskFactor } from '../lib/api'
 import { RiskBand } from './ui/RiskBand'
+import { Stamp } from './ui/Stamp'
+import { buttonClass } from './ui/buttonStyles'
 import { HighlightedText } from './HighlightedText'
 
 type Message = { sender: string; text: string }
@@ -14,29 +16,37 @@ function factorMessageIndex(factor: RiskFactor): number | null {
   return Number.isInteger(index) && index >= 0 ? index : null
 }
 
-function FactorCard({ factor }: { factor: RiskFactor }) {
+function FactorCard({ factor, index = 0 }: { factor: RiskFactor; index?: number }) {
   const { t } = useTranslation()
   return (
-    <li className="rounded-lg border border-border bg-surface p-3 text-sm">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold text-heading">{factor.code}</span>
-        {factor.severity && (
-          <span className="rounded border border-border px-2 py-0.5 text-xs">
-            {t('analyze.message.severity', { value: factor.severity, defaultValue: 'Severity: {{value}}' })}
-          </span>
-        )}
-        {factor.confidence && (
-          <span className="rounded border border-border px-2 py-0.5 text-xs">
-            {t('analyze.message.confidence', {
-              value: factor.confidence,
-              defaultValue: 'Confidence: {{value}}',
-            })}
-          </span>
-        )}
+    <li className="entry pb-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-mono text-[12px] font-bold uppercase tracking-[0.08em] text-heading">{factor.code}</span>
+          {factor.severity && (
+            <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+              {t('analyze.message.severity', { value: factor.severity, defaultValue: 'Severity: {{value}}' })}
+            </span>
+          )}
+          {factor.confidence && (
+            <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+              {t('analyze.message.confidence', {
+                value: factor.confidence,
+                defaultValue: 'Confidence: {{value}}',
+              })}
+            </span>
+          )}
+        </div>
+        <Stamp
+          lines={[factor.severity || 'noted']}
+          tone={factor.severity === 'high' ? 'stamp' : factor.severity === 'medium' ? 'warning' : 'muted'}
+          animate
+          delayMs={index * 80}
+        />
       </div>
-      {factor.explanation && <p className="mt-1">{factor.explanation}</p>}
+      {factor.explanation && <p className="mt-1.5 text-text">{factor.explanation}</p>}
       {factor.evidence?.excerpt && (
-        <p className="mt-1 text-muted">
+        <p className="mt-1.5 border-l-2 border-stamp bg-stamp/[0.06] px-2.5 py-1.5 text-muted">
           {t('analyze.message.excerpt', { text: factor.evidence.excerpt, defaultValue: 'Excerpt: {{text}}' })}
         </p>
       )}
@@ -80,11 +90,11 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
     <section
       aria-labelledby="message-analysis-heading"
       aria-live="polite"
-      className="space-y-4 rounded-xl border border-border bg-surface p-6"
+      className="space-y-6"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 id="message-analysis-heading" className="text-lg font-semibold text-heading">
+          <h2 id="message-analysis-heading" className="font-display text-lg font-bold text-heading">
             {title}
           </h2>
           <p className="mt-1 text-sm text-muted">
@@ -120,7 +130,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
         </div>
       </div>
 
-      <p className="rounded-lg border border-border bg-surface2/40 p-3 text-sm text-muted">
+      <p className="border-l-2 border-cover bg-cover/[0.05] px-4 py-3 text-sm leading-relaxed text-muted">
         {t('analyze.message.highlightNote', {
           defaultValue:
             'Highlighted phrases triggered the factors listed under each message. Conversation text is treated as data, never as instructions.',
@@ -128,7 +138,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
       </p>
 
       <section aria-labelledby="message-transcript-heading">
-        <h3 id="message-transcript-heading" className="mb-2 font-semibold text-heading">
+        <h3 id="message-transcript-heading" className="mb-2 font-display text-[15px] font-bold text-heading">
           {t('analyze.message.transcript', { defaultValue: 'Conversation with highlighted evidence' })}
         </h3>
         <ol className="space-y-3">
@@ -138,16 +148,16 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
               .map((factor) => factor.evidence?.span)
               .filter((span): span is Span => !!span && typeof span.start === 'number' && typeof span.end === 'number')
             return (
-              <li key={index} className="rounded-lg border border-border bg-surface2/30 p-4">
+              <li key={index} className="entry pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-medium text-heading">
                     {t('analyze.message.messageN', { n: index + 1, defaultValue: 'Message {{n}}' })}
                   </h4>
-                  <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">
+                  <span className="border border-border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-muted">
                     {t('analyze.message.sender', { sender: message.sender, defaultValue: 'Sender: {{sender}}' })}
                   </span>
                 </div>
-                <div className="mt-2 rounded border border-border bg-surface p-3">
+                <div className="mt-2.5 border border-border bg-tint/30 p-3">
                   <HighlightedText text={message.text} spans={spans} />
                 </div>
                 {messageFactors.length === 0 ? (
@@ -157,7 +167,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {messageFactors.map((factor, factorIndex) => (
-                      <FactorCard key={factor.evidence_key || `${factor.code}-${factorIndex}`} factor={factor} />
+                      <FactorCard key={factor.evidence_key || `${factor.code}-${factorIndex}`} factor={factor} index={factorIndex} />
                     ))}
                   </ul>
                 )}
@@ -171,9 +181,9 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
         <section
           aria-labelledby="message-escalation-heading"
           role="note"
-          className="rounded-lg border border-warning/40 bg-warning/10 p-4"
+          className="border-l-2 border-warning bg-warning/10 p-4"
         >
-          <h3 id="message-escalation-heading" className="font-semibold text-heading">
+          <h3 id="message-escalation-heading" className="font-display text-[15px] font-bold text-heading">
             {t('analyze.message.escalation', { defaultValue: 'Escalation across the conversation' })}
           </h3>
           <p className="mt-1 text-sm text-text">
@@ -184,7 +194,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
           </p>
           <ul className="mt-2 space-y-2">
             {conversationFactors.map((factor, index) => (
-              <FactorCard key={factor.evidence_key || `${factor.code}-${index}`} factor={factor} />
+              <FactorCard key={factor.evidence_key || `${factor.code}-${index}`} factor={factor} index={index} />
             ))}
           </ul>
         </section>
@@ -192,12 +202,12 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
 
       {otherFactors.length > 0 && (
         <section aria-labelledby="message-other-heading">
-          <h3 id="message-other-heading" className="mb-2 font-semibold text-heading">
+          <h3 id="message-other-heading" className="mb-2 font-display text-[15px] font-bold text-heading">
             {t('analyze.message.otherFactors', { defaultValue: 'Other signals' })}
           </h3>
           <ul className="space-y-2">
             {otherFactors.map((factor, index) => (
-              <FactorCard key={factor.evidence_key || `${factor.code}-${index}`} factor={factor} />
+              <FactorCard key={factor.evidence_key || `${factor.code}-${index}`} factor={factor} index={index} />
             ))}
           </ul>
         </section>
@@ -212,7 +222,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
       )}
 
       <section aria-labelledby="message-recommendations-heading">
-        <h3 id="message-recommendations-heading" className="mb-2 font-semibold text-heading">
+        <h3 id="message-recommendations-heading" className="mb-2 font-display text-[15px] font-bold text-heading">
           {t('analyze.message.recommendations', { defaultValue: 'Recommendations' })}
         </h3>
         {recs.length === 0 ? (
@@ -220,7 +230,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
             {t('analyze.message.noRecommendations', { defaultValue: 'No recommendations available.' })}
           </p>
         ) : (
-          <ol className="list-decimal space-y-1 pl-5 text-sm">
+          <ol className="list-decimal space-y-2 pl-5 text-sm">
             {recs.map((recommendation, index) => (
               <li key={recommendation.code || index}>
                 <span className="font-medium">{recommendation.code}</span>
@@ -232,17 +242,17 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
           </ol>
         )}
         {has1930 && (
-          <div className="mt-3 rounded-lg border border-danger/30 bg-danger/10 p-3">
+          <div className="mt-3 rounded-none border border-danger/30 bg-danger/10 p-3">
             <p className="font-medium text-heading">
               {t('analyze.message.cyberHelp', { defaultValue: 'If money was sent, act quickly' })}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-              <a href="tel:1930" className="rounded bg-caramel px-3 py-1.5 text-sm font-semibold text-buttonText">
+              <a href="tel:1930" className={buttonClass('primary')}>
                 {t('analyze.message.call1930', { defaultValue: 'Call 1930' })}
               </a>
               <a
                 href="/help/cybercrime"
-                className="rounded border border-border bg-surface px-3 py-1.5 text-sm font-medium"
+                className={buttonClass('secondary')}
               >
                 {t('analyze.message.reportCyber', { defaultValue: 'Report Cybercrime' })}
               </a>
@@ -252,7 +262,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
       </section>
 
       <section aria-labelledby="message-unknowns-heading">
-        <h3 id="message-unknowns-heading" className="mb-2 font-semibold text-heading">
+        <h3 id="message-unknowns-heading" className="mb-2 font-display text-[15px] font-bold text-heading">
           {t('analyze.message.unknowns', { defaultValue: 'Unknowns and missing information' })}
         </h3>
         {unknowns.length === 0 && missing.length === 0 ? (
@@ -268,7 +278,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
               {unknowns.length === 0 ? (
                 <p className="text-sm text-muted">{t('analyze.message.none', { defaultValue: 'None' })}</p>
               ) : (
-                <ul className="list-disc space-y-1 pl-5 text-sm">
+                <ul className="list-disc space-y-1.5 pl-5 text-sm text-text">
                   {unknowns.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
@@ -282,7 +292,7 @@ export function MessageAnalysis({ messages, data }: { messages: Message[]; data:
               {missing.length === 0 ? (
                 <p className="text-sm text-muted">{t('analyze.message.none', { defaultValue: 'None' })}</p>
               ) : (
-                <ul className="list-disc space-y-1 pl-5 text-sm">
+                <ul className="list-disc space-y-1.5 pl-5 text-sm text-text">
                   {missing.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}

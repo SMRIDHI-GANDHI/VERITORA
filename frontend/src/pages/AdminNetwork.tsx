@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getAdminNetworkAlerts, type NetworkAlert } from '../lib/api'
 import { ErrorState } from '../components/ui/ErrorState'
+import { Masthead } from '../components/ui/Masthead'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Stamp } from '../components/ui/Stamp'
 
 const GRAPH_CAP = 40
 
@@ -85,20 +87,21 @@ export function AdminNetwork() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Network alerts (moderator)</h1>
-        <p className="mt-2 text-muted">Review related patterns and leads. Identifiers are hashed/masked.</p>
-      </div>
+      <Masthead
+        title="Network alerts (moderator)"
+        subtitle="Review related patterns and leads. Identifiers are hashed/masked."
+        aside={<Stamp lines={['Leads', 'not proof']} tone="ink" />}
+      />
 
-      <div role="note" className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm text-heading">
+      <div role="note" className="border-l-2 border-warning bg-warning/10 px-4 py-3 text-sm text-heading">
         <strong>Lead for review, not proof of wrongdoing.</strong> Network links are signals for investigation and moderation review only.
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => setView('graph')} className={`rounded-lg border px-3 py-2 text-sm ${view === 'graph' ? 'border-caramel bg-caramel/20' : 'border-border bg-surface'}`}>Graph view</button>
-        <button type="button" onClick={() => setView('table')} className={`rounded-lg border px-3 py-2 text-sm ${view === 'table' ? 'border-caramel bg-caramel/20' : 'border-border bg-surface'}`}>Table view (accessible)</button>
+        <button type="button" onClick={() => setView('graph')} aria-pressed={view === 'graph'} className={`border px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${view === 'graph' ? 'border-stamp bg-tint/70 text-heading' : 'border-border text-muted hover:text-heading'}`}>Graph view</button>
+        <button type="button" onClick={() => setView('table')} aria-pressed={view === 'table'} className={`border px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${view === 'table' ? 'border-stamp bg-tint/70 text-heading' : 'border-border text-muted hover:text-heading'}`}>Table view (accessible)</button>
         {items.length > GRAPH_CAP && (
-          <button type="button" onClick={() => setShowAll((v) => !v)} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+          <button type="button" onClick={() => setShowAll((v) => !v)} className="border border-heading px-3 py-2 text-sm font-semibold text-heading transition-colors hover:bg-tint/40">
             {showAll ? 'Show capped view' : `Show more (${items.length - GRAPH_CAP} more)`}
           </button>
         )}
@@ -110,19 +113,19 @@ export function AdminNetwork() {
       ) : error ? (
         <ErrorState message={error} />
       ) : items.length === 0 ? (
-        <div className="rounded-xl border border-border bg-surface p-6 text-sm text-muted">No network alerts available.</div>
+        <div className="border border-border p-5 text-sm text-muted">No network alerts available.</div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <section className="rounded-xl border border-border bg-surface p-4">
+          <section className="border border-border p-4">
             {view === 'graph' ? (
               <div>
-                <h2 className="mb-2 text-lg font-semibold text-heading">Relationship graph</h2>
+                <h2 className="mb-2 font-display text-[17px] font-bold text-heading">Relationship graph</h2>
                 <p className="mb-3 text-xs text-muted">Interactive selection: click nodes/edges in table or select an alert to view details. Canvas is decorative; use table view for full accessible parity.</p>
                 <svg
                   role="img"
                   aria-label={`Network graph summary with ${graphModel.nodes.length} nodes and ${graphModel.edges.length} relationships`}
                   viewBox={`0 0 ${graphModel.w} ${graphModel.h}`}
-                  className="w-full rounded-lg border border-border bg-surface2/20"
+                  className="w-full border border-border bg-tint/30"
                 >
                   {graphModel.edges.map((e) => {
                     const a = graphModel.pos.get(e.source)
@@ -161,7 +164,7 @@ export function AdminNetwork() {
               </div>
             ) : (
               <div>
-                <h2 className="mb-2 text-lg font-semibold text-heading">Relationships table</h2>
+                <h2 className="mb-2 font-display text-[17px] font-bold text-heading">Relationships table</h2>
                 <div className="overflow-auto">
                   <table className="min-w-full text-sm">
                     <thead>
@@ -176,7 +179,7 @@ export function AdminNetwork() {
                     </thead>
                     <tbody>
                       {visible.map((a, i) => (
-                        <tr key={a.relationship_id || i} className={`cursor-pointer border-b border-border ${selected === a ? 'bg-caramel/10' : ''}`} onClick={() => setSelected(a)}>
+                        <tr key={a.relationship_id || i} className={`cursor-pointer border-b border-border ${selected === a ? 'bg-tint/70 shadow-[inset_3px_0_0_0_var(--color-stamp)]' : ''}`} onClick={() => setSelected(a)}>
                           <td className="p-2">{a.relationship_type}</td>
                           <td className="p-2">{a.evidence?.kind || '—'}</td>
                           <td className="p-2">{a.evidence?.similarity ?? '—'}</td>
@@ -192,8 +195,8 @@ export function AdminNetwork() {
             )}
           </section>
 
-          <aside className="rounded-xl border border-border bg-surface p-4">
-            <h2 className="text-lg font-semibold text-heading">Alert details</h2>
+          <aside className="border border-border p-4">
+            <h2 className="font-display text-[17px] font-bold text-heading">Alert details</h2>
             {!selected ? (
               <p className="mt-2 text-sm text-muted">Select an alert (table row) to view details.</p>
             ) : (
@@ -212,11 +215,11 @@ export function AdminNetwork() {
                 </div>
                 <div>
                   <strong>Record refs / timestamps:</strong>
-                  <pre className="mt-1 overflow-auto rounded border border-border bg-surface2/30 p-2 text-xs">{JSON.stringify(selected.evidence?.record_refs || {}, null, 2)}</pre>
+                  <pre className="mt-1 overflow-auto border border-border bg-tint/40 p-2 text-xs">{JSON.stringify(selected.evidence?.record_refs || {}, null, 2)}</pre>
                 </div>
                 <div>
                   <strong>Detail:</strong>
-                  <pre className="mt-1 overflow-auto rounded border border-border bg-surface2/30 p-2 text-xs">{JSON.stringify(selected.evidence?.detail || {}, null, 2)}</pre>
+                  <pre className="mt-1 overflow-auto border border-border bg-tint/40 p-2 text-xs">{JSON.stringify(selected.evidence?.detail || {}, null, 2)}</pre>
                 </div>
               </div>
             )}

@@ -5,6 +5,11 @@ import { listMyPassports, revokePassport, type PassportListItem } from '../lib/a
 import { RiskBand } from '../components/ui/RiskBand'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Masthead } from '../components/ui/Masthead'
+import { Section } from '../components/ui/Section'
+import { Stamp, type StampTone } from '../components/ui/Stamp'
+import { Button } from '../components/ui/Button'
+import { buttonClass } from '../components/ui/buttonStyles'
 
 function shortDate(v?: string | null) {
   if (!v) return '—'
@@ -13,6 +18,12 @@ function shortDate(v?: string | null) {
   } catch {
     return v
   }
+}
+
+const STATUS_TONE: Record<string, StampTone> = {
+  active: 'stamp',
+  revoked: 'warning',
+  expired: 'muted',
 }
 
 export function MyPassports() {
@@ -53,21 +64,23 @@ export function MyPassports() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">{t('passports.title', { defaultValue: 'My Passports' })}</h1>
-        <p className="mt-2 text-muted">
-          {t('passports.subtitle', {
-            defaultValue:
-              'Trust Passports are shareable, time-limited snapshots for decision support (not certificates). You can revoke an active passport at any time. Share links are shown only when created.',
-          })}
-        </p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-8">
+      <Masthead
+        title={t('passports.title', { defaultValue: 'My Passports' })}
+        subtitle={t('passports.subtitle', {
+          defaultValue:
+            'Trust Passports are shareable, time-limited snapshots for decision support (not certificates). You can revoke an active passport at any time. Share links are shown only when created.',
+        })}
+        aside={<Stamp lines={['Register', `${items.length} issued`]} tone="ink" />}
+      />
 
-      {msg && <div role="status" className="rounded-lg border border-border bg-surface p-3 text-sm">{msg}</div>}
+      {msg && (
+        <div role="status" className="border-l-2 border-cover bg-cover/[0.06] px-4 py-2.5 text-sm text-text">
+          {msg}
+        </div>
+      )}
 
-      <section className="rounded-xl border border-border bg-surface p-4">
-        <h2 className="mb-3 text-lg font-semibold text-heading">{t('passports.listTitle', { defaultValue: 'Your passports' })}</h2>
+      <Section title={t('passports.listTitle', { defaultValue: 'Your passports' })} meta={`${items.length} issued`}>
         {loading ? (
           <Skeleton className="h-28 w-full" />
         ) : error ? (
@@ -77,51 +90,61 @@ export function MyPassports() {
             {t('passports.empty', { defaultValue: 'No passports yet. Create one from an analysis result to share a snapshot.' })}
           </p>
         ) : (
-          <ul className="space-y-3">
+          <ul>
             {items.map((p) => (
-              <li key={p.id} className="rounded-lg border border-border p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-heading">{t('passports.passport', { defaultValue: 'Passport' })}</span>
-                      <span className={`rounded border px-2 py-0.5 text-xs font-medium ${p.status === 'active' ? 'border-success/40 text-success' : p.status === 'revoked' ? 'border-danger/40 text-danger' : 'border-border text-muted'}`}>
-                        {p.status === 'active'
-                          ? t('passports.status.active', { defaultValue: 'Active' })
-                          : p.status === 'revoked'
-                            ? t('passports.status.revoked', { defaultValue: 'Revoked' })
-                            : t('passports.status.expired', { defaultValue: 'Expired' })}
-                      </span>
-                      {p.risk_band && <RiskBand band={p.risk_band as 'lower' | 'moderate' | 'high_concern' | 'very_high_concern' | 'insufficient_information'} />}
+              <li key={p.id} className="entry pb-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-display text-[15px] font-bold text-heading">{t('passports.passport', { defaultValue: 'Passport' })}</span>
+                      <Stamp
+                        lines={[
+                          p.status === 'active'
+                            ? t('passports.status.active', { defaultValue: 'Active' })
+                            : p.status === 'revoked'
+                              ? t('passports.status.revoked', { defaultValue: 'Revoked' })
+                              : t('passports.status.expired', { defaultValue: 'Expired' }),
+                        ]}
+                        tone={STATUS_TONE[p.status] || 'muted'}
+                      />
+                      {p.risk_band && (
+                        <RiskBand band={p.risk_band as 'lower' | 'moderate' | 'high_concern' | 'very_high_concern' | 'insufficient_information'} />
+                      )}
                     </div>
-                    <div className="text-sm text-muted">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
                       {t('passports.created', { defaultValue: 'Created' })}: {shortDate(p.created_at)} · {t('passports.expires', { defaultValue: 'Expires' })}: {shortDate(p.expires_at)}
                     </div>
-                    {p.revoked_at && <div className="text-sm text-muted">{t('passports.revokedAt', { defaultValue: 'Revoked' })}: {shortDate(p.revoked_at)}</div>}
-                    {p.summary && <p className="text-sm">{p.summary}</p>}
-                    <div className="text-xs text-muted">
+                    {p.revoked_at && (
+                      <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+                        {t('passports.revokedAt', { defaultValue: 'Revoked' })}: {shortDate(p.revoked_at)}
+                      </div>
+                    )}
+                    {p.summary && <p className="max-w-[64ch] text-sm leading-relaxed text-text">{p.summary}</p>}
+                    <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
                       {t('passports.rules', { defaultValue: 'Rules' })}: {p.rules_version || '—'}
                       {p.risk_score != null ? ` · ${t('passports.indicator', { defaultValue: 'Indicator' })}: ${p.risk_score}/100` : ''}
                     </div>
                   </div>
                   <div className="flex flex-col items-stretch gap-2">
                     {p.analysis_id && (
-                      <Link to={`/analysis/${p.analysis_id}`} className="rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium">
+                      <Link to={`/analysis/${p.analysis_id}`} className={buttonClass('secondary', 'sm')}>
                         {t('passports.viewAnalysis', { defaultValue: 'View analysis' })}
                       </Link>
                     )}
                     {p.status === 'active' && (
-                      <button
+                      <Button
+                        variant="danger"
+                        size="sm"
                         type="button"
                         onClick={() => void onRevoke(p.id)}
                         disabled={busyId === p.id}
-                        className="rounded-lg border border-danger/40 px-3 py-2 text-sm font-medium text-danger disabled:opacity-50"
                       >
                         {busyId === p.id ? t('passports.revoking', { defaultValue: 'Revoking…' }) : t('passports.revoke', { defaultValue: 'Revoke' })}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
-                <p className="mt-3 text-xs text-muted">
+                <p className="mt-2.5 max-w-[70ch] text-xs leading-relaxed text-muted">
                   {t('passports.noLink', {
                     defaultValue:
                       'For security, the share token/link is shown only once at creation time and is not stored in retrievable form.',
@@ -131,7 +154,7 @@ export function MyPassports() {
             ))}
           </ul>
         )}
-      </section>
+      </Section>
     </div>
   )
 }

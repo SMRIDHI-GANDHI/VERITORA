@@ -3,6 +3,13 @@ import { Link } from 'react-router-dom'
 import { createReport, type ReportCategory, type ReportCreatePayload } from '../lib/api'
 import { detectPii, maskPii } from '../lib/pii'
 import { ErrorState } from '../components/ui/ErrorState'
+import { Masthead } from '../components/ui/Masthead'
+import { Section } from '../components/ui/Section'
+import { Stamp } from '../components/ui/Stamp'
+import { Button } from '../components/ui/Button'
+import { buttonClass } from '../components/ui/buttonStyles'
+import { fieldClass, fieldLabelClass } from '../components/ui/Field'
+import { Icon } from '../components/ui/Icon'
 
 const categories: { value: ReportCategory; label: string }[] = [
   { value: 'payment_request', label: 'Payment request' },
@@ -67,105 +74,129 @@ export function ReportNew() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 rounded-xl border border-border bg-surface p-6">
-        <h1 className="text-2xl font-bold text-heading">Report submitted (pending review)</h1>
-        <p className="text-sm">
+      <div className="mx-auto max-w-2xl space-y-7">
+        <Masthead
+          title="Report submitted (pending review)"
+          aside={<Stamp lines={['Filed', 'under review']} tone="warning" />}
+        />
+        <p className="max-w-[62ch] text-[15px] leading-relaxed text-text">
           Thank you. Your submission is <strong>pending review</strong> and is <strong>not treated as a confirmed fact</strong>.
           Moderators review reports before any approved summary appears publicly.
         </p>
-        <div className="rounded-lg border border-border bg-surface2/40 p-4 text-sm">
-          <p><strong>Report ID:</strong> {result.id}</p>
-          <p><strong>Moderation status:</strong> {result.moderation_status}</p>
-          {result.pii_warnings?.length ? <p><strong>PII warnings:</strong> {result.pii_warnings.join(', ')}</p> : <p>No PII warnings returned.</p>}
+        <div className="border border-border bg-tint/30 p-4 text-sm">
+          <div className="space-y-1.5 font-mono text-[13px]">
+            <div><span className="font-bold uppercase tracking-[0.1em] text-muted">Report ID · </span>{result.id}</div>
+            <div><span className="font-bold uppercase tracking-[0.1em] text-muted">Moderation status · </span>{result.moderation_status}</div>
+            {result.pii_warnings?.length ? (
+              <div><span className="font-bold uppercase tracking-[0.1em] text-muted">PII warnings · </span>{result.pii_warnings.join(', ')}</div>
+            ) : (
+              <div className="text-muted">No PII warnings returned.</div>
+            )}
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Link to="/reports" className="rounded-lg bg-caramel px-4 py-2 font-semibold text-buttonText">Back to reports</Link>
+        <div>
+          <Link to="/reports" className={buttonClass('primary')}>Back to reports</Link>
         </div>
       </div>
     )
   }
 
-  const inputCls = 'w-full rounded-lg border border-border bg-surface p-2.5 text-text'
-  const labelCls = 'mb-1 block text-sm font-medium text-heading'
-
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-heading">Submit a Community Report</h1>
-        <p className="mt-2 text-muted">Share your experience to help others. Reports are reviewed by moderators before public display.</p>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <Masthead
+        title="Submit a Community Report"
+        subtitle="Share your experience to help others. Reports are reviewed by moderators before public display."
+        aside={<Stamp lines={['Intake', 'form 7']} tone="ink" />}
+      />
+
+      <div className="flex items-start gap-3 border-l-2 border-warning bg-warning/10 px-4 py-3.5 text-sm leading-relaxed">
+        <Icon name="warning" size={16} className="mt-0.5 shrink-0 text-warning" />
+        <div>
+          <p className="font-display font-bold text-heading">Redaction warning</p>
+          <p className="mt-1 text-text">
+            Please remove or mask personal/sensitive information (phone numbers, emails, ID numbers, bank/UPI/card
+            details, OTPs, addresses). Do not share passwords or confidential documents.
+          </p>
+        </div>
       </div>
 
-      <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm">
-        <p className="font-medium text-heading">Redaction warning</p>
-        <p>Please remove or mask personal/sensitive information (phone numbers, emails, ID numbers, bank/UPI/card details, OTPs, addresses). Do not share passwords or confidential documents.</p>
-      </div>
+      <form onSubmit={onSubmit} className="space-y-6" noValidate>
+        <Section title="The report" meta="required fields marked">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="company" className={fieldLabelClass}>Company name <span aria-hidden="true">*</span></label>
+              <input id="company" value={form.company_name} onChange={(e) => set('company_name', e.target.value)} className={fieldClass} required />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label htmlFor="category" className={fieldLabelClass}>Category <span aria-hidden="true">*</span></label>
+                <select id="category" value={form.category} onChange={(e) => set('category', e.target.value as ReportCategory)} className={fieldClass}>
+                  {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="occurred" className={fieldLabelClass}>Approximate date (optional)</label>
+                <input id="occurred" type="date" value={form.occurred_on || ''} onChange={(e) => set('occurred_on', e.target.value)} className={fieldClass} />
+              </div>
+              <div><label htmlFor="jobtitle" className={fieldLabelClass}>Job title (optional)</label><input id="jobtitle" value={form.job_title || ''} onChange={(e) => set('job_title', e.target.value)} className={fieldClass} /></div>
+              <div><label htmlFor="joburl" className={fieldLabelClass}>Job URL (optional)</label><input id="joburl" value={form.job_url || ''} onChange={(e) => set('job_url', e.target.value)} className={fieldClass} /></div>
+              <div className="md:col-span-2"><label htmlFor="recruiter" className={fieldLabelClass}>Recruiter identifier (optional)</label><input id="recruiter" value={form.recruiter_identifier || ''} onChange={(e) => set('recruiter_identifier', e.target.value)} className={fieldClass} placeholder="Name, email, phone, or profile link (avoid extra PII)" /></div>
+            </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-border bg-surface p-6" noValidate>
-        <div>
-          <label htmlFor="company" className={labelCls}>Company name <span aria-hidden="true">*</span></label>
-          <input id="company" value={form.company_name} onChange={(e) => set('company_name', e.target.value)} className={inputCls} required />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="category" className={labelCls}>Category <span aria-hidden="true">*</span></label>
-            <select id="category" value={form.category} onChange={(e) => set('category', e.target.value as ReportCategory)} className={inputCls}>
-              {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+            <div>
+              <label htmlFor="desc" className={fieldLabelClass}>Description <span aria-hidden="true">*</span></label>
+              <textarea id="desc" value={form.description} onChange={(e) => set('description', e.target.value)} className={fieldClass} rows={8} minLength={30} maxLength={5000} required aria-describedby="desc-help pii-warn" />
+              <div id="desc-help" className="mt-1.5 flex justify-between font-mono text-[11px] text-muted">
+                <span>Minimum 30 characters. Describe what happened factually.</span>
+                <span>{form.description.length}/5000</span>
+              </div>
+            </div>
+
+            {piiWarnings.length > 0 && (
+              <div id="pii-warn" role="alert" className="border-l-2 border-danger bg-danger/10 px-4 py-3 text-sm">
+                <p className="font-medium text-heading">Possible sensitive information detected: {piiWarnings.join(', ')}</p>
+                <p className="mt-1 text-text">Consider masking or removing it before submitting.</p>
+                <Button variant="secondary" size="sm" type="button" className="mt-2.5" onClick={() => set('description', maskPii(form.description))}>
+                  Apply basic masking
+                </Button>
+              </div>
+            )}
+
+            <fieldset className="border border-border p-3.5">
+              <legend className="px-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Optional flags</legend>
+              <div className="space-y-2 text-sm text-text">
+                <label className="flex items-center gap-2.5"><input type="checkbox" className="mt-0.5" checked={!!form.interacted} onChange={(e) => set('interacted', e.target.checked)} /> I interacted with this opportunity</label>
+                <label className="flex items-center gap-2.5"><input type="checkbox" className="mt-0.5" checked={!!form.paid} onChange={(e) => set('paid', e.target.checked)} /> I paid money</label>
+                <label className="flex items-center gap-2.5"><input type="checkbox" className="mt-0.5" checked={!!form.shared_info} onChange={(e) => set('shared_info', e.target.checked)} /> I shared personal/sensitive information</label>
+              </div>
+            </fieldset>
           </div>
-          <div>
-            <label htmlFor="occurred" className={labelCls}>Approximate date (optional)</label>
-            <input id="occurred" type="date" value={form.occurred_on || ''} onChange={(e) => set('occurred_on', e.target.value)} className={inputCls} />
-          </div>
-          <div><label htmlFor="jobtitle" className={labelCls}>Job title (optional)</label><input id="jobtitle" value={form.job_title || ''} onChange={(e) => set('job_title', e.target.value)} className={inputCls} /></div>
-          <div><label htmlFor="joburl" className={labelCls}>Job URL (optional)</label><input id="joburl" value={form.job_url || ''} onChange={(e) => set('job_url', e.target.value)} className={inputCls} /></div>
-          <div className="md:col-span-2"><label htmlFor="recruiter" className={labelCls}>Recruiter identifier (optional)</label><input id="recruiter" value={form.recruiter_identifier || ''} onChange={(e) => set('recruiter_identifier', e.target.value)} className={inputCls} placeholder="Name, email, phone, or profile link (avoid extra PII)" /></div>
-        </div>
+        </Section>
 
-        <div>
-          <label htmlFor="desc" className={labelCls}>Description <span aria-hidden="true">*</span></label>
-          <textarea id="desc" value={form.description} onChange={(e) => set('description', e.target.value)} className={inputCls} rows={8} minLength={30} maxLength={5000} required aria-describedby="desc-help pii-warn" />
-          <div id="desc-help" className="mt-1 flex justify-between text-xs text-muted"><span>Minimum 30 characters. Describe what happened factually.</span><span>{form.description.length}/5000</span></div>
-        </div>
+        <Section title="Evidence upload (optional)" meta="text report always works">
+          <p className="max-w-[68ch] text-sm leading-relaxed text-text">
+            If evidence upload is available, provide only necessary files (images/PDF). Do not upload IDs, bank
+            statements, or unnecessary personal data. Max size/type limits apply as shown by the service.
+          </p>
+          <p className="mt-2 text-xs text-muted">Evidence upload workflow may be limited in this environment; you can still submit a text report for review.</p>
+        </Section>
 
-        {piiWarnings.length > 0 && (
-          <div id="pii-warn" role="alert" className="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm">
-            <p className="font-medium text-heading">Possible sensitive information detected: {piiWarnings.join(', ')}</p>
-            <p className="mt-1">Consider masking or removing it before submitting.</p>
-            <button type="button" className="mt-2 rounded border border-border bg-surface px-3 py-1.5 text-sm" onClick={() => set('description', maskPii(form.description))}>
-              Apply basic masking
-            </button>
-          </div>
-        )}
-
-        <fieldset className="rounded-lg border border-border p-3">
-          <legend className="px-1 text-sm font-medium text-heading">Optional flags</legend>
-          <div className="space-y-2 text-sm">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.interacted} onChange={(e) => set('interacted', e.target.checked)} /> I interacted with this opportunity</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.paid} onChange={(e) => set('paid', e.target.checked)} /> I paid money</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.shared_info} onChange={(e) => set('shared_info', e.target.checked)} /> I shared personal/sensitive information</label>
-          </div>
-        </fieldset>
-
-        <div className="rounded-lg border border-border bg-surface2/30 p-3 text-sm">
-          <p className="font-medium text-heading">Evidence upload (optional)</p>
-          <p className="text-muted">If evidence upload is available, provide only necessary files (images/PDF). Do not upload IDs, bank statements, or unnecessary personal data. Max size/type limits apply as shown by the service.</p>
-          <p className="mt-1 text-xs text-muted">Evidence upload workflow may be limited in this environment; you can still submit a text report for review.</p>
-        </div>
-
-        <div className="rounded-lg border border-border p-3 text-sm">
-          <p className="font-medium text-heading">Before you submit</p>
-          <p>Your report will be marked <strong>pending review</strong> and is <strong>not treated as a confirmed fact</strong>. Public visibility happens only after moderator review and redaction where needed.</p>
-          <label className="mt-2 flex items-start gap-2">
-            <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+        <Section title="Before you submit" meta="moderated">
+          <p className="max-w-[68ch] text-sm leading-relaxed text-text">
+            Your report will be marked <strong>pending review</strong> and is <strong>not treated as a confirmed fact</strong>.
+            Public visibility happens only after moderator review and redaction where needed.
+          </p>
+          <label className="mt-3.5 flex items-start gap-2.5 text-sm text-text">
+            <input type="checkbox" className="mt-1" checked={ack} onChange={(e) => setAck(e.target.checked)} />
             <span>I understand this is a user-submitted report pending review, and I have removed/masked sensitive information where possible.</span>
           </label>
-        </div>
+        </Section>
 
         {error && <ErrorState message={error} />}
 
-        <button type="submit" disabled={submitting} className="rounded-lg bg-caramel px-5 py-2.5 font-semibold text-buttonText disabled:opacity-60">
+        <Button type="submit" disabled={submitting} size="lg">
           {submitting ? 'Submitting…' : 'Submit report'}
-        </button>
+        </Button>
       </form>
     </div>
   )

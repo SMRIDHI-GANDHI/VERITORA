@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getAdminTrends, HttpError, type TrendResponse } from '../lib/api'
 import { ErrorState } from '../components/ui/ErrorState'
+import { Masthead } from '../components/ui/Masthead'
 import { Skeleton } from '../components/ui/Skeleton'
+import { Stamp } from '../components/ui/Stamp'
 
 const WINDOWS = [4, 8, 12] as const
 
@@ -59,20 +61,21 @@ export function AdminTrends() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold text-heading">{t('admin.trends.title')}</h1>
-        <p className="mt-2 text-muted">{t('admin.trends.subtitle')}</p>
-      </header>
+      <Masthead
+        title={t('admin.trends.title')}
+        subtitle={t('admin.trends.subtitle')}
+        aside={<Stamp lines={['Trends', 'early warning']} tone="ink" />}
+      />
 
-      <div className="rounded-xl border border-border bg-surface p-4">
-        <label htmlFor={selectId} className="mb-1 block text-sm font-medium text-heading">
+      <div className="border border-border p-4">
+        <label htmlFor={selectId} className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
           {t('admin.trends.window')}
         </label>
         <select
           id={selectId}
           value={weeks}
           onChange={(e) => setWeeks(Number(e.target.value))}
-          className="w-full rounded-lg border border-border bg-surface p-2.5 text-text sm:w-56"
+          className="w-full w-full border border-border bg-surface px-3 py-2 text-[15px] text-text text-text sm:w-56"
         >
           {WINDOWS.map((w) => (
             <option key={w} value={w}>
@@ -94,25 +97,25 @@ export function AdminTrends() {
           onRetry={error.forbidden ? undefined : () => setAttempt((n) => n + 1)}
         />
       ) : !data || data.approved_report_total === 0 ? (
-        <div className="rounded-xl border border-border bg-surface p-6 text-sm text-muted">
+        <div className="border border-border p-5 text-sm text-muted">
           {t('admin.trends.empty')}
         </div>
       ) : (
         <>
           <section aria-labelledby="trend-summary" className="space-y-3">
-            <h2 id="trend-summary" className="text-lg font-semibold text-heading">
+            <h2 id="trend-summary" className="font-display text-[17px] font-bold text-heading">
               {t('admin.trends.summary')}
             </h2>
             <dl className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-border bg-surface p-4">
+              <div className="border border-border p-4">
                 <dt className="text-sm text-muted">{t('admin.trends.total')}</dt>
-                <dd className="mt-1 text-3xl font-bold text-heading">{data.approved_report_total}</dd>
+                <dd className="mt-1 font-display text-3xl font-bold text-heading">{data.approved_report_total}</dd>
               </div>
-              <div className="rounded-xl border border-border bg-surface p-4">
+              <div className="border border-border p-4">
                 <dt className="text-sm text-muted">{t('admin.trends.rising')}</dt>
-                <dd className="mt-1 text-3xl font-bold text-heading">{data.rising_categories.length}</dd>
+                <dd className="mt-1 font-display text-3xl font-bold text-heading">{data.rising_categories.length}</dd>
               </div>
-              <div className="rounded-xl border border-border bg-surface p-4">
+              <div className="border border-border p-4">
                 <dt className="text-sm text-muted">{t('admin.trends.generatedAt')}</dt>
                 <dd className="mt-1 text-sm text-text">
                   {new Date(data.generated_at).toLocaleString(undefined, { timeZone: 'UTC' })}
@@ -121,8 +124,8 @@ export function AdminTrends() {
             </dl>
           </section>
 
-          <section aria-labelledby="trend-weekly" className="rounded-xl border border-border bg-surface p-4">
-            <h2 id="trend-weekly" className="mb-3 text-lg font-semibold text-heading">
+          <section aria-labelledby="trend-weekly" className="border border-border p-4">
+            <h2 id="trend-weekly" className="mb-3 font-display text-[17px] font-bold text-heading">
               {t('admin.trends.weekly')}
             </h2>
             <div className="overflow-x-auto">
@@ -151,9 +154,9 @@ export function AdminTrends() {
                         </th>
                         <td className="py-2 pr-3 tabular-nums">{p.count}</td>
                         <td className="w-1/2 py-2">
-                          <div aria-hidden="true" className="h-2.5 w-full rounded bg-border/40">
+                          <div aria-hidden="true" className="h-2.5 w-full bg-tint">
                             <div
-                              className="h-2.5 rounded bg-caramel"
+                              className="h-2.5 bg-cover"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -167,8 +170,8 @@ export function AdminTrends() {
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section aria-labelledby="trend-rising" className="rounded-xl border border-border bg-surface p-4">
-              <h2 id="trend-rising" className="mb-3 text-lg font-semibold text-heading">
+            <section aria-labelledby="trend-rising" className="border border-border p-4">
+              <h2 id="trend-rising" className="mb-3 font-display text-[17px] font-bold text-heading">
                 {t('admin.trends.rising')}
               </h2>
               {data.rising_categories.length === 0 ? (
@@ -209,8 +212,8 @@ export function AdminTrends() {
               )}
             </section>
 
-            <section aria-labelledby="trend-categories" className="rounded-xl border border-border bg-surface p-4">
-              <h2 id="trend-categories" className="mb-3 text-lg font-semibold text-heading">
+            <section aria-labelledby="trend-categories" className="border border-border p-4">
+              <h2 id="trend-categories" className="mb-3 font-display text-[17px] font-bold text-heading">
                 {t('admin.trends.byCategory')}
               </h2>
               {categories.length === 0 ? (
@@ -229,8 +232,8 @@ export function AdminTrends() {
           </div>
 
           {data.notes.length > 0 && (
-            <section aria-labelledby="trend-notes" className="rounded-xl border border-border bg-surface p-4">
-              <h2 id="trend-notes" className="mb-2 text-lg font-semibold text-heading">
+            <section aria-labelledby="trend-notes" className="border border-border p-4">
+              <h2 id="trend-notes" className="mb-2 font-display text-[17px] font-bold text-heading">
                 {t('admin.trends.notes')}
               </h2>
               <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
@@ -241,7 +244,7 @@ export function AdminTrends() {
             </section>
           )}
 
-          <p className="rounded-lg border border-border bg-surface2/40 p-3 text-sm text-muted">
+          <p className="rounded-none border border-border bg-surface2/40 p-3 text-sm text-muted">
             {t('admin.trends.disclaimer')}
           </p>
         </>

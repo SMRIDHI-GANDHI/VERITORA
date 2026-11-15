@@ -1,3 +1,5 @@
+import { Icon, type IconName } from './Icon'
+
 type Band = 'lower' | 'moderate' | 'high_concern' | 'very_high_concern' | 'insufficient_information'
 
 const labels: Record<Band, string> = {
@@ -8,17 +10,23 @@ const labels: Record<Band, string> = {
   insufficient_information: 'Insufficient information',
 }
 
-const styles: Record<Band, string> = {
-  lower: 'border-success/40 bg-success/10 text-success',
-  moderate: 'border-warning/40 bg-warning/10 text-warning',
-  high_concern: 'border-danger/50 bg-danger/10 text-danger',
-  very_high_concern: 'border-danger/60 bg-danger/15 text-danger',
-  insufficient_information: 'border-mocha/30 bg-mocha/10 text-mocha',
+const meta: Record<Band, { icon: IconName; className: string }> = {
+  lower: { icon: 'checked', className: 'border-success/60 bg-success/10 text-success' },
+  moderate: { icon: 'warning', className: 'border-warning/60 bg-warning/10 text-warning' },
+  high_concern: { icon: 'warning', className: 'border-stamp/60 bg-stamp/10 text-stamp' },
+  very_high_concern: { icon: 'warning', className: 'border-stamp bg-stamp/15 text-stamp' },
+  insufficient_information: { icon: 'inconclusive', className: 'border-ash/50 bg-ash/10 text-ash' },
 }
 
-export function RiskBand({ band }: { band: Band }) {
+/** The band is always a sentence of words; colour and icon only corroborate it. */
+export function RiskBand({ band, size = 'md' }: { band: Band; size?: 'sm' | 'md' }) {
+  const m = meta[band]
+  const sizing = size === 'sm' ? 'px-2 py-1 text-[11px]' : 'px-3 py-1.5 text-sm'
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${styles[band]}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 border font-semibold leading-none ${sizing} ${m.className}`}
+    >
+      <Icon name={m.icon} size={size === 'sm' ? 12 : 14} />
       {labels[band]}
     </span>
   )

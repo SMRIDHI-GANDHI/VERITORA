@@ -4,6 +4,12 @@ import { deleteMe, patchMe, type User } from '../lib/api'
 import { setExplanationLanguage, setUiLanguage } from '../i18n'
 import { useTheme } from '../theme/useTheme'
 import type { Theme } from '../theme/ThemeContext'
+import { Masthead } from '../components/ui/Masthead'
+import { Section } from '../components/ui/Section'
+import { Stamp } from '../components/ui/Stamp'
+import { Button } from '../components/ui/Button'
+import { buttonClass } from '../components/ui/buttonStyles'
+import { fieldClass, fieldLabelClass } from '../components/ui/Field'
 
 export function Settings() {
   const { user, refreshMe, logout } = useAuth()
@@ -73,55 +79,76 @@ export function Settings() {
   }
 
   return (
-    <section className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
-      {msg && <div role="status" className="rounded border border-border bg-surface p-2 text-sm">{msg}</div>}
-      <div className="space-y-4 rounded-lg border border-border bg-surface p-6">
-        <div>
-          <label htmlFor="set-name" className="mb-1 block text-sm font-medium">Name</label>
-          <input id="set-name" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded border border-border bg-bg px-3 py-2" />
-        </div>
-        <div>
-          <label htmlFor="set-ui" className="mb-1 block text-sm font-medium">Interface language</label>
-          <select id="set-ui" value={uiLang} onChange={(e) => setUiLang(e.target.value as 'en' | 'hi')} className="w-full rounded border border-border bg-bg px-3 py-2">
-            <option value="en">English</option><option value="hi">हिन्दी</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="set-expl" className="mb-1 block text-sm font-medium">Explanation language</label>
-          <select id="set-expl" value={explLang} onChange={(e) => setExplLang(e.target.value as 'en' | 'hi')} className="w-full rounded border border-border bg-bg px-3 py-2">
-            <option value="en">English</option><option value="hi">हिन्दी</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="set-theme" className="mb-1 block text-sm font-medium">Theme</label>
-          <select id="set-theme" value={theme} onChange={(e) => setTheme(e.target.value as Theme)} className="w-full rounded border border-border bg-bg px-3 py-2">
-            <option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option>
-          </select>
-        </div>
-        <button type="button" onClick={save} disabled={saving} className="rounded bg-caramel px-4 py-2 font-semibold text-buttonText disabled:opacity-60">
-          {saving ? 'Saving...' : 'Save settings'}
-        </button>
-      </div>
+    <div className="mx-auto max-w-xl space-y-8">
+      <Masthead
+        title="Settings"
+        subtitle="Account preferences, interface language, and data controls."
+        aside={<Stamp lines={['Account', user?.name ? user.name.slice(0, 12).toUpperCase() : 'guest']} tone="ink" />}
+      />
 
-      <div className="rounded-lg border border-danger/30 bg-surface p-6">
-        <h2 className="text-lg font-semibold text-danger">Account & data deletion</h2>
-        <p className="mt-1 text-sm text-muted">Request deletion of your account and associated data.</p>
-        <button type="button" onClick={() => setShowDelete(true)} className="mt-3 rounded border border-danger px-4 py-2 text-danger">Request deletion</button>
-      </div>
+      {msg && (
+        <div role="status" className="border-l-2 border-cover bg-cover/[0.06] px-4 py-2.5 text-sm text-text">
+          {msg}
+        </div>
+      )}
+
+      <Section title="Preferences" meta="saved to your account">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void save()
+          }}
+        >
+          <div>
+            <label htmlFor="set-name" className={fieldLabelClass}>Name</label>
+            <input id="set-name" value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
+          </div>
+          <div>
+            <label htmlFor="set-ui" className={fieldLabelClass}>Interface language</label>
+            <select id="set-ui" value={uiLang} onChange={(e) => setUiLang(e.target.value as 'en' | 'hi')} className={fieldClass}>
+              <option value="en">English</option><option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="set-expl" className={fieldLabelClass}>Explanation language</label>
+            <select id="set-expl" value={explLang} onChange={(e) => setExplLang(e.target.value as 'en' | 'hi')} className={fieldClass}>
+              <option value="en">English</option><option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="set-theme" className={fieldLabelClass}>Theme</label>
+            <select id="set-theme" value={theme} onChange={(e) => setTheme(e.target.value as Theme)} className={fieldClass}>
+              <option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option>
+            </select>
+          </div>
+          <Button type="submit" disabled={saving}>
+            {saving ? 'Saving...' : 'Save settings'}
+          </Button>
+        </form>
+      </Section>
+
+      <Section title="Account & data deletion" meta="requires review">
+        <p className="max-w-[60ch] text-sm text-muted">Request deletion of your account and associated data.</p>
+        <Button variant="danger" type="button" className="mt-3" onClick={() => setShowDelete(true)}>
+          Request deletion
+        </Button>
+      </Section>
 
       {showDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="del-title" tabIndex={-1} className="w-full max-w-md rounded-lg bg-surface p-6">
-            <h2 id="del-title" className="text-lg font-bold">Confirm deletion request</h2>
-            <p className="mt-2 text-sm text-muted">This will submit a request to delete your account and data. This action may not be immediately reversible.</p>
-            <div className="mt-4 flex justify-end gap-2">
-              <button ref={cancelRef} type="button" onClick={() => setShowDelete(false)} className="rounded border border-border px-4 py-2">Cancel</button>
-              <button ref={confirmRef} type="button" onClick={confirmDelete} className="rounded bg-danger px-4 py-2 font-semibold text-white">Confirm request</button>
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="del-title" tabIndex={-1} className="w-full max-w-md border-2 border-heading bg-paper p-6 shadow-lift">
+            <h2 id="del-title" className="font-display text-lg font-bold text-heading">Confirm deletion request</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              This will submit a request to delete your account and data. This action may not be immediately reversible.
+            </p>
+            <div className="mt-5 flex justify-end gap-2.5">
+              <button ref={cancelRef} type="button" onClick={() => setShowDelete(false)} className={buttonClass('secondary')}>Cancel</button>
+              <button ref={confirmRef} type="button" onClick={() => void confirmDelete()} className={buttonClass('danger')}>Confirm request</button>
             </div>
           </div>
         </div>
       )}
-    </section>
+    </div>
   )
 }

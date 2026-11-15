@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T00:00:00.000Z",
+  "title": "Design System: VERITORA",
+  "extensions": {
+    "colorMeta": {
+      "cover": { "role": "primary", "displayName": "File Cover / Ink Blue", "canonical": "rgb(39 64 107)" },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "rgb(246 243 234)" },
+      "stamp": { "role": "tertiary", "displayName": "Stamp Vermillion", "canonical": "rgb(192 57 43)" },
+      "tint": { "role": "neutral", "displayName": "Tint", "canonical": "rgb(207 199 180)" },
+      "ash": { "role": "neutral", "displayName": "Ash", "canonical": "rgb(92 86 72)" },
+      "bg": { "role": "neutral", "displayName": "Ground", "canonical": "rgb(246 243 234)" },
+      "surface": { "role": "neutral", "displayName": "Surface", "canonical": "rgb(253 251 245)" },
+      "text": { "role": "neutral", "displayName": "Body Ink", "canonical": "rgb(31 28 23)" },
+      "heading": { "role": "neutral", "displayName": "Heading Ink", "canonical": "rgb(20 18 15)" },
+      "accent": { "role": "primary", "displayName": "Accent / Action Ink", "canonical": "rgb(39 64 107)" },
+      "danger": { "role": "semantic", "displayName": "Danger", "canonical": "rgb(179 38 30)" },
+      "warning": { "role": "semantic", "displayName": "Warning", "canonical": "rgb(138 97 8)" },
+      "success": { "role": "semantic", "displayName": "Success", "canonical": "rgb(47 107 79)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display / Masthead", "purpose": "Page titles and hero headings in serif; closed by a double rule." },
+      "body": { "displayName": "Body", "purpose": "Readable working text in sans with relaxed leading." },
+      "label": { "displayName": "Label / Mono", "purpose": "Field labels, stamps, rail metadata, and status text in uppercase mono." }
+    },
+    "shadows": [
+      { "name": "paper", "value": "0 1px 0 rgb(var(--color-border)), 0 10px 24px -18px rgb(var(--color-heading) / 0.55)", "purpose": "Resting elevation for key paper surfaces." },
+      { "name": "lift", "value": "0 2px 0 rgb(var(--color-border)), 0 18px 34px -22px rgb(var(--color-heading) / 0.6)", "purpose": "Emphasized lifted surfaces when needed." }
+    ],
+    "motion": [
+      { "name": "stamp-press", "value": "420ms cubic-bezier(0.2, 0.8, 0.25, 1)", "purpose": "Single authored impression for stamp entry; collapsed under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink-blue primary action with paper text; square-ish, no shadow.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Primary action</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgb(39 64 107);background:rgb(39 64 107);color:rgb(246 243 234);padding:8px 16px;font:600 14px/1 'Archivo','Noto Sans Devanagari',system-ui,sans-serif;border-radius:2px;cursor:pointer;transition:background-color 150ms,color 150ms,border-color 150ms}.ds-btn-primary:hover{background:rgb(63 98 147);border-color:rgb(63 98 147)}.ds-btn-primary:focus-visible{outline:2px solid rgb(39 64 107);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined secondary action on paper.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Secondary action</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgb(20 18 15);background:transparent;color:rgb(20 18 15);padding:8px 16px;font:600 14px/1 'Archivo','Noto Sans Devanagari',system-ui,sans-serif;border-radius:2px;cursor:pointer;transition:background-color 150ms}.ds-btn-secondary:hover{background:rgba(207,199,180,.4)}.ds-btn-secondary:focus-visible{outline:2px solid rgb(39 64 107);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Filed form control with mono label, bordered surface, and focus ring.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Field label</span><input class=\"ds-input\" type=\"text\" placeholder=\"Placeholder\" /></label>",
+      "css": ".ds-field{display:block}.ds-field-label{display:block;margin-bottom:6px;font:700 11px/1 'Courier Prime','Noto Sans Devanagari',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:rgb(92 86 72)}.ds-input{width:100%;box-sizing:border-box;border:1px solid rgb(207 199 180);background:rgb(253 251 245);color:rgb(31 28 23);padding:8px 12px;font:400 15px/1.4 'Archivo','Noto Sans Devanagari',system-ui,sans-serif;border-radius:2px;transition:border-color 150ms}.ds-input::placeholder{color:rgba(92,86,72,.8)}.ds-input:hover{border-color:rgb(207 199 180)}.ds-input:focus-visible{outline:2px solid rgb(39 64 107);outline-offset:2px}"
+    },
+    {
+      "name": "Status Label",
+      "kind": "chip",
+      "description": "Icon + word status; never color alone. Fixed vocabulary.",
+      "html": "<span class=\"ds-status ds-status-warning\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M8 2 1.5 13h13L8 2Z\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"M8 6v3.2M8 11h.01\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg><span>Warning</span></span>",
+      "css": ".ds-status{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(138,97,8,.5);background:rgba(138,97,8,.1);color:rgb(138 97 8);padding:4px 8px;font:700 11px/1 'Courier Prime','Noto Sans Devanagari',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;border-radius:0}"
+    },
+    {
+      "name": "Stamp",
+      "kind": "custom",
+      "description": "Dated office-style stamp impression; vermillion reserved for this and critical state.",
+      "html": "<span class=\"ds-stamp\"><span>CHECKED</span><span>2026-11-15</span></span>",
+      "css": ".ds-stamp{display:inline-flex;flex-direction:column;align-items:center;border:2px solid rgb(192 57 43);background:rgba(192,57,43,.1);color:rgb(192 57 43);padding:6px 10px;text-align:center;font:700 10px/1.7 'Courier Prime','Noto Sans Devanagari',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}"
+    },
+    {
+      "name": "File Rail Nav Item",
+      "kind": "nav",
+      "description": "Navigation entry on the ink-blue cover rail.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\">Dashboard</a>",
+      "css": ".ds-nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;color:rgba(246,243,234,.85);text-decoration:none;font:400 14.5px/1.3 'Archivo','Noto Sans Devanagari',system-ui,sans-serif;transition:background-color 150ms,color 150ms}.ds-nav-item:hover{background:rgba(246,243,234,.1);color:rgb(246 243 234)}.ds-nav-item-active{background:rgb(246 243 234);color:rgb(39 64 107);font-weight:600}"
+    },
+    {
+      "name": "Card / Paper Block",
+      "kind": "card",
+      "description": "Bordered paper surface for grouped content.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-head\">Quick check</div><div class=\"ds-card-body\">Filed content on a paper surface.</div></div>",
+      "css": ".ds-card{border:2px solid rgb(20 18 15);background:rgb(253 251 245);box-shadow:0 1px 0 rgb(207 199 180),0 10px 24px -18px rgba(20,18,15,.55);border-radius:3px}.ds-card-head{border-bottom:2px solid rgb(20 18 15);padding:16px 24px;font:700 20px/1.2 'Libre Baskerville','Noto Serif Devanagari',Georgia,serif;color:rgb(20 18 15)}.ds-card-body{padding:20px 24px;font:400 15px/1.65 'Archivo','Noto Sans Devanagari',system-ui,sans-serif;color:rgb(31 28 23)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Dated Stamp",
+    "overview": "VERITORA’s incumbent interface reads as an official case file: paper grounds, an ink-blue file cover for the shell and primary actions, and vermillion reserved for stamps and critical state. The system is documentary and evidentiary rather than promotional — calm, legible, and procedural — because the product must show what was checked, what is known, what is unknown, and what to do next without alarmism or verdict language. Structure carries meaning: mastheads, double rules, dotted entry lines, field labels, and stamped statuses make every screen feel like a filed record in the same set.",
+    "keyCharacteristics": [
+      "File, not feed: cover rail, paper surfaces, double rules, and dotted entry separators create a consistent document anatomy.",
+      "Ink, paper, and a single warning color: ink-blue anchors navigation and actions; paper stays light on the cover in both themes; vermillion is quarantined to stamps and critical state.",
+      "Stamped evidence: status and risk are icon + word with mono uppercase treatment and fixed vocabulary.",
+      "Tabular, plain, accessible: tabular numerals, clear focus rings, reduced-motion support, and bilingual typography."
+    ],
+    "rules": [
+      { "name": "The One Accent Warning Rule", "body": "Vermillion belongs to stamps and critical state. It must not become a general brand accent or background wash.", "section": "colors" },
+      { "name": "The Filed-Data Rule", "body": "Data, dates, codes, and table figures use tabular numerals.", "section": "typography" },
+      { "name": "The Flat-File Rule", "body": "Depth is expressed through paper/surface steps, borders, and rules rather than heavy layering.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do present status and risk as icon + text with the fixed product vocabulary; color is corroborative, never the only signal.",
+      "Do keep vermillion limited to stamp impressions and critical/high-concern state within the evidentiary system.",
+      "Do use the masthead + double rule + section/entry anatomy to keep pages reading as one document set.",
+      "Do preserve tabular numerals for data, visible focus states, prefers-reduced-motion behavior, and bilingual/Devanagari-tolerant layouts.",
+      "Do treat external content as untrusted data in UI flows and keep privacy/calm language consistent with PRODUCT.md."
+    ],
+    "donts": [
+      "Don't introduce \"fake/genuine\" verdicts or probability phrasing; show evidence, unknowns, bands, and next steps instead.",
+      "Don't turn stamp/vermillion into a decorative accent, background theme, or alarmist treatment.",
+      "Don't use pill-heavy, glossy, or feed-like patterns that break the filed-record character.",
+      "Don't rely on color alone, remove focus indicators, or add motion that ignores reduced-motion preferences.",
+      "Don't promote a single page's composition into a system-wide rule; keep task-local concepts out of the global design system."
+    ]
+  }
+}
