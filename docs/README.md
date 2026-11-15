@@ -14,7 +14,9 @@
 | 10 | TEST-PLAN | Strategy, evaluation, demo scenarios |
 | 11 | ROADMAP | Phases and task IDs (B-backend, F-frontend) |
 | 12 | CODING-STANDARDS | Style, structure, definition of done |
+| 13 | OPERATIONS-RECOVERY | Production config review, backup/restore, migration rollback/runbook |
 | adr/ | Architecture decision records | |
+
 
 Prompts for OpenCode live in `../prompts/` (one brief per task ID).
 Source brief: the original "VeriTrust Project Brief & Build Specification".

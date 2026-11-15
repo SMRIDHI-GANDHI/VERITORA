@@ -264,6 +264,8 @@ Defined in `.github/workflows/ci.yml` (runs on `push` and `pull_request`):
 - [Test plan](docs/10-TEST-PLAN.md)
 - [Roadmap](docs/11-ROADMAP.md)
 - [Coding standards](docs/12-CODING-STANDARDS.md)
+- [Operations: production config, backup/restore, migration rollback](docs/13-OPERATIONS-RECOVERY.md)
+
 
 ### Architecture Decision Records (`docs/adr/`)
 

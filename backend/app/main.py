@@ -45,9 +45,9 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
-        # In development also allow any localhost/127.0.0.1 port: Vite shifts
-        # ports when 5173 is busy, and a browser treats localhost and 127.0.0.1
-        # as different origins. Production ignores this (returns None).
+        # In development/test/local environments also allow any localhost/127.0.0.1
+        # port: Vite may shift ports and browsers treat localhost and 127.0.0.1 as
+        # different origins. This convenience is disabled outside dev-like envs.
         allow_origin_regex=settings.cors_origin_regex,
         allow_credentials=True,
         allow_methods=["*"],

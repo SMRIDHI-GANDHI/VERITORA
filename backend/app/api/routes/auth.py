@@ -50,7 +50,7 @@ def _origin_allowed(request: Request) -> bool:
         if src_origin in allowed:
             return True
         host = (parsed.hostname or "").lower()
-        if settings.app_env.strip().lower() not in {"production", "prod"} and host in {
+        if settings.app_env.strip().lower() in {"development", "dev", "test", "local"} and host in {
             "localhost",
             "127.0.0.1",
         }:
